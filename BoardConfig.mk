@@ -62,7 +62,8 @@ BOARD_MKBOOTIMG_ARGS += --ramdisk_offset $(BOARD_RAMDISK_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --tags_offset $(BOARD_KERNEL_TAGS_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --dtb_offset $(BOARD_DTB_OFFSET)
 BOARD_KERNEL_CMDLINE := bootopt=64S3,32N2,64N2
-BOARD_BOOTCONFIG := androidboot.selinux=enforcing
+# Bring-up only: collect denials with SELinux permissive, then remove this.
+BOARD_BOOTCONFIG := androidboot.selinux=permissive
 
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_RAMDISK_USE_LZ4 := true
@@ -161,8 +162,7 @@ DEVICE_MATRIX_FILE := $(DEVICE_PATH)/vintf/compatibility_matrix.xml
 
 # Properties
 TARGET_VENDOR_PROP += $(DEVICE_PATH)/props/vendor.prop
-TARGET_SYSTEM_EXT_PROP += $(DEVICE_PATH)/props/system_ext.prop
-TARGET_PRODUCT_PROP += $(DEVICE_PATH)/props/product.prop
+TARGET_ODM_PROP += $(DEVICE_PATH)/props/odm.prop
 
 # SELinux
 include device/mediatek/sepolicy_vndr/SEPolicy.mk
@@ -171,7 +171,6 @@ SYSTEM_EXT_PRIVATE_SEPOLICY_DIRS += $(DEVICE_PATH)/sepolicy/private
 
 # VNDK / vendor API
 BOARD_SHIPPING_API_LEVEL := 34
-BOARD_API_LEVEL := 34
 
 # Proprietary
 include vendor/xiaomi/degas/BoardConfigVendor.mk

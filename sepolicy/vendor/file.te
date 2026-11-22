@@ -1,0 +1,3 @@
+# Factory opcust partition (carrier.prop), mounted read-only at /opcust in
+# first stage. Its files carry this label in their xattrs.
+type opcust_file, file_type;
