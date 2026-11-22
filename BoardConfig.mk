@@ -158,6 +158,10 @@ BOARD_AVB_VENDOR_BOOT_ADD_HASH_FOOTER_ARGS += \
 
 # VINTF
 DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/vintf/manifest.xml
+# Stock VINTF fragments named like a source module cannot be packaged or
+# copied (see tools/gen-proprietary-files.py); merge them into the manifest.
+DEVICE_MANIFEST_FILE += $(addprefix vendor/xiaomi/degas/proprietary/, \
+    $(shell sed -n 's|^\(vendor/etc/vintf/[^;]*\);EXTRACT_ONLY$$|\1|p' $(DEVICE_PATH)/proprietary-files.txt))
 DEVICE_MATRIX_FILE := $(DEVICE_PATH)/vintf/compatibility_matrix.xml
 
 # Properties
@@ -176,7 +180,7 @@ BOARD_SHIPPING_API_LEVEL := 34
 include vendor/xiaomi/degas/BoardConfigVendor.mk
 
 # Init: opcust carrier props and RSC props (see init/init_degas.cpp)
-$(call soong_config_set,libinit,vendor_init_lib,//$(DEVICE_PATH)/init:libinit_degas)
+$(call soong_config_set,libinit,vendor_init_lib,//$(DEVICE_PATH):libinit_degas)
 
 # Mount point of the factory opcust partition (see rootdir/etc/fstab.mt6897)
 BOARD_ROOT_EXTRA_FOLDERS := opcust

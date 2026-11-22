@@ -12,9 +12,13 @@ LOCAL_PATH := device/xiaomi/degas
 
 PRODUCT_SHIPPING_API_LEVEL := 34
 
+# The stock vendor libraries link against VNDK 34.
+PRODUCT_EXTRA_VNDK_VERSIONS := 34
+
 # Soong namespaces
 PRODUCT_SOONG_NAMESPACES += \
-    $(LOCAL_PATH)
+    $(LOCAL_PATH) \
+    hardware/mediatek
 
 # Dynamic partitions / Virtual A/B
 PRODUCT_USE_DYNAMIC_PARTITIONS := true
@@ -51,6 +55,9 @@ PRODUCT_COPY_FILES += \
 # Display
 PRODUCT_AAPT_CONFIG := normal
 PRODUCT_AAPT_PREF_CONFIG := xxhdpi
+
+# MediaTek telephony frameworks (AOSP builds, used by the stock ImsService)
+$(call inherit-product, hardware/mediatek/frameworks/mediatek-frameworks.mk)
 
 # Proprietary files
 $(call inherit-product, vendor/xiaomi/degas/degas-vendor.mk)
