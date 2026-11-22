@@ -1,0 +1,35 @@
+#
+# Copyright (C) 2026 nyxianglyph
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+$(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/vabc_features.mk)
+
+$(call inherit-product, device/xiaomi/degas/device.mk)
+$(call inherit-product, vendor/lineage/config/common_full_phone.mk)
+
+PRODUCT_NAME := lineage_degas
+PRODUCT_DEVICE := degas
+PRODUCT_MANUFACTURER := Xiaomi
+PRODUCT_BRAND := Xiaomi
+PRODUCT_MODEL := 2406APNFAG
+
+PRODUCT_PRODUCT_PROPERTIES += ro.product.marketname=Xiaomi 14T
+
+PRODUCT_SYSTEM_NAME := degas_global
+PRODUCT_SYSTEM_DEVICE := degas
+
+PRODUCT_BUILD_PROP_OVERRIDES += \
+    BuildDesc="degas_global-user 16 BP2A.250605.031.A3 OS3.0.305.0.WNEMIXM release-keys" \
+    DeviceName=$(PRODUCT_SYSTEM_DEVICE) \
+    DeviceProduct=$(PRODUCT_SYSTEM_NAME)
+
+BUILD_FINGERPRINT := Xiaomi/degas_global/degas:16/BP2A.250605.031.A3/OS3.0.305.0.WNEMIXM:user/release-keys
+
+# crDroid
+TARGET_BOOT_ANIMATION_RES := 1080
+TARGET_HAS_UDFPS := true
+TARGET_ENABLE_BLUR := true
