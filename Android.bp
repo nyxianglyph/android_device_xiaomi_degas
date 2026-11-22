@@ -6,3 +6,31 @@
 
 soong_namespace {
 }
+
+// Stock camera feature tables named *.xml that are not XML; the build would
+// reject them as PRODUCT_COPY_FILES. extract-files.py exposes them as
+// filegroups (see tools/gen-proprietary-files.py), installed here unchecked.
+
+prebuilt_etc {
+    name: "gma_custom.xml_mt6897",
+    src: "//vendor/xiaomi/degas:degas_vendor_etc_camera_mt6897_gma_custom_xml",
+    filename: "gma_custom.xml",
+    sub_dir: "camera/mt6897",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "gma_custom.xml_mt6985",
+    src: "//vendor/xiaomi/degas:degas_vendor_etc_camera_mt6985_gma_custom_xml",
+    filename: "gma_custom.xml",
+    sub_dir: "camera/mt6985",
+    vendor: true,
+}
+
+prebuilt_etc {
+    name: "gma_custom.xml_mt6989",
+    src: "//vendor/xiaomi/degas:degas_vendor_etc_camera_mt6989_gma_custom_xml",
+    filename: "gma_custom.xml",
+    sub_dir: "camera/mt6989",
+    vendor: true,
+}

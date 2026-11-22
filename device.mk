@@ -59,5 +59,11 @@ PRODUCT_AAPT_PREF_CONFIG := xxhdpi
 # MediaTek telephony frameworks (AOSP builds, used by the stock ImsService)
 $(call inherit-product, hardware/mediatek/frameworks/mediatek-frameworks.mk)
 
+# Stock camera feature tables, see Android.bp
+PRODUCT_PACKAGES += \
+    gma_custom.xml_mt6897 \
+    gma_custom.xml_mt6985 \
+    gma_custom.xml_mt6989
+
 # Proprietary files
 $(call inherit-product, vendor/xiaomi/degas/degas-vendor.mk)

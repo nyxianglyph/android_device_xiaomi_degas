@@ -4,6 +4,11 @@
 # SPDX-License-Identifier: Apache-2.0
 #
 
+# Like stock, apps run 64-bit only (the Cortex-A715 cores have no AArch32);
+# the 32-bit vendor libraries stay for the vendor processes that use them.
+# Read by core_64_bit.mk, so it has to come first.
+ZYGOTE_FORCE_64 := true
+
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/vabc_features.mk)

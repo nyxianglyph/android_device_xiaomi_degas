@@ -22,7 +22,9 @@ usage: gen-proprietary-files.py <dump> [<shadowing list>] > proprietary-files.tx
 import os
 import re
 import struct
+import subprocess
 import sys
+import xml.etree.ElementTree as ET
 
 # Built or provided by the Android build / this device tree instead.
 EXCLUDE = [
@@ -35,7 +37,15 @@ EXCLUDE = [
     r'vendor/bin/(sh|toybox_vendor|toolbox|vndservicemanager)',
     r'vendor/etc/init/vndservicemanager\.rc',
     r'.*/oat/.*',  # dexopt output of the stock framework
+    # boringssl_self_test64 comes from the source build, with its own rc files.
+    r'vendor/etc/(init/)?boringssl_self_test.*\.rc',
+    # hardware/mediatek's chipinfo is the stock script and rc, byte for byte.
+    r'vendor/etc/init/chipinfo_init\.rc',
     r'vendor/overlay/.*',  # HyperOS RROs; overlay/ holds our own values instead
+    # The AOSP example CAS service; the source build ships the CAS APEX.
+    r'vendor/bin/hw/android\.hardware\.cas-service\.example',
+    r'vendor/etc/init/cas-default\.rc',
+    r'vendor/etc/vintf/manifest/android\.hardware\.cas-service\.xml',
     # Glob characters cannot be build paths. The only such stock files are
     # the SR*.dla video super-resolution models of the HyperOS system side,
     # which no vendor component uses.
@@ -55,6 +65,72 @@ SYSTEM_EXT = [
     r'system_ext/etc/sysconfig/com\.mediatek\.ims\.config\.xml',
     r'system_ext/etc/permissions/com\.mediatek\.ims.*\.xml',
 ]
+
+# Colliding stock files (stock-path-collisions.txt) that are simply left out:
+# the shell config of the source build, and the rc of a service that comes
+# from the source build.
+DROP_ON_COLLISION = re.compile(r'vendor/etc/mkshrc|vendor/etc/init/android\.hardware\.drm-service\.clearkey\.rc')
+
+
+def v34_name(rel):
+    """<dir>/<stem>-v34<ext>, the installed name of a colliding stock file."""
+    base, ext = os.path.splitext(rel)
+    return f'{base}-v34{ext}'
+
+
+# Stock rc files of HIDL services whose interfaces are not built from source:
+# the PRODUCT_COPY_FILES check (host_init_verifier) only knows source
+# hidl_interfaces, so these are installed as prebuilt_etc packages instead.
+PACKAGED_RC = re.compile(r'vendor/etc/init/vendor\.mediatek\.hardware\.aee@1\.1-service\.rc')
+
+# VNDK v34 libraries: on the device they come from the VNDK APEX, and
+# extract-files.py leaves them out of the soong deps of the stock blobs.
+VNDK_V34 = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../../..',
+                        'prebuilts/vndk/v34/arm64/configs/module_names.txt')
+
+
+def elf_dynamic(path):
+    """(DT_NEEDED names, DT_SONAME) of an ELF, None for anything else."""
+    if not is_elf(path):
+        return None
+    out = subprocess.run(['readelf', '-d', path], capture_output=True, text=True).stdout
+    needed, soname = [], None
+    for l in out.splitlines():
+        if '(NEEDED)' in l:
+            needed.append(l.split('[')[1].split(']')[0])
+        elif '(SONAME)' in l:
+            soname = l.split('[')[1].split(']')[0]
+    return needed, soname
+
+
+def needs_checkelf_off(rel, full, vndk):
+    """True when soong's ELF check cannot pass for a stock blob.
+
+    Either a dependency is a VNDK v34 library (not a soong dep, see above),
+    or the stock library carries a SONAME other than its file name.
+    """
+    info = elf_dynamic(full)
+    if info is None:
+        return False
+    needed, soname = info
+    if any(n[:-3] in vndk for n in needed if n.endswith('.so')):
+        return True
+    return rel.endswith('.so') and soname is not None and soname != os.path.basename(rel)
+
+
+def not_xml(full):
+    # Stock files named *.xml that are not XML (several top-level elements,
+    # shell-style comments); the build refuses to copy those as .xml.
+    try:
+        ET.parse(full)
+        return False
+    except ET.ParseError:
+        return True
+
+
+def filegroup_name(rel):
+    return 'degas_' + re.sub(r'[^\w]', '_', rel)
+
 
 # system_ext blobs named like an unrelated source module (see extract-files.py).
 SYSTEM_EXT_SHADOWING = {'libsink'}
@@ -101,6 +177,23 @@ def main():
                 cls, name = line.split()
                 classes[name] = cls
     renamed = {}
+    coll_path = os.path.join(os.path.dirname(os.path.abspath(__file__)), '..',
+                             'stock-path-collisions.txt')
+    collisions = set()
+    if os.path.exists(coll_path):
+        collisions = {l.strip() for l in open(coll_path)
+                      if l.strip() and not l.startswith('#')}
+    vintf_merged = set()
+    for rel in list(files):
+        if rel not in collisions:
+            continue
+        if DROP_ON_COLLISION.fullmatch(rel):
+            del files[rel]
+            links.pop(rel, None)
+        elif '/etc/vintf/' in rel:
+            vintf_merged.add(rel)
+        elif not rel.endswith('.so') and '/bin/' not in rel:
+            renamed[rel] = v34_name(rel)
     for rel in list(files):
         m = re.fullmatch(r'(vendor|odm)/(?:lib(?:64)?/([^/]+)\.so|bin/(?:hw/)?([^/]+))', rel)
         cls = classes.get(m.group(2) or m.group(3)) if m else None
@@ -109,6 +202,8 @@ def main():
             links.pop(rel, None)
         elif cls == 'v34':
             renamed[rel] = rel[:-3] + '-v34.so'
+        elif cls == 'v34bin':
+            renamed[rel] = rel + '-v34'
 
     suffixes = lib_suffixes(files)
     shadowing = set()
@@ -118,7 +213,7 @@ def main():
             m = re.fullmatch(r'(vendor|odm)/(?:lib(?:64)?/([^/]+)\.so|bin/(?:hw/)?([^/]+))', rel)
             name = m and (m.group(2) or m.group(3))
             if (m and name in shadowing and rel not in suffixes
-                    and classes.get(name) not in ('vendor', 'v34')):
+                    and classes.get(name) not in ('vendor', 'v34', 'v34bin')):
                 suffixes[rel] = '_vendor'
     for rel in files:
         m = re.fullmatch(r'system_ext/lib64/([^/]+)\.so', rel)
@@ -131,6 +226,14 @@ def main():
                       and any(n in shadowing and n not in have32
                               for n in elf32_needed(os.path.join(dump, r)))}
 
+    vndk = {l.split()[1] for l in open(VNDK_V34) if l.strip()}
+    checkelf_off = {r for r in files if (r.split('/')[1] in ('lib', 'lib64', 'bin')
+                                         and needs_checkelf_off(r, os.path.join(dump, r), vndk))}
+    # Installed by device/xiaomi/degas/Android.bp from these filegroups.
+    not_xml_files = {r for r in files if r.endswith('.xml') and '/etc/' in r
+                     and not r.startswith('system_ext/') and '/etc/vintf/' not in r
+                     and not_xml(os.path.join(dump, r))}
+
     section = None
     for rel in sorted(files):
         top = '/'.join(rel.split('/')[:2])
@@ -140,12 +243,17 @@ def main():
         args = [f'SYMLINK={l}' for l in sorted(links.get(rel, []))]
         if rel in suffixes:
             args.append(f'MODULE_SUFFIX={suffixes[rel]}')
-        if '/etc/vintf/' in rel and shadows_package(rel, shadowing):
+        if '/etc/vintf/' in rel and (shadows_package(rel, shadowing) or rel in vintf_merged):
             # VINTF files may not be copied either; BoardConfig.mk merges
             # these into the device manifest instead.
             args.append('EXTRACT_ONLY')
-        elif is_bin_data(rel, os.path.join(dump, rel)) or shadows_package(rel, shadowing):
+        elif is_bin_data(rel, os.path.join(dump, rel)) or (
+                shadows_package(rel, shadowing) and rel not in renamed):
             args.append('MAKE_COPY_RULE_ONLY')
+        if rel in not_xml_files:
+            args += [f'FILEGROUP={filegroup_name(rel)}', 'EXTRACT_ONLY']
+        if rel in checkelf_off and rel not in unresolvable32:
+            args.append('DISABLE_CHECKELF')
         if rel in unresolvable32:
             # The stock file needs a 32-bit library the stock vendor does not
             # have either; it cannot load there, keep it but drop its deps.
@@ -153,9 +261,11 @@ def main():
         if rel in renamed:
             # Installed as <name>-v34.so next to the source build of <name>;
             # extract-files.py points the stock users at the new name.
-            print(';'.join([f'{rel}:{renamed[rel]}'] + args + ['FIX_SONAME']))
+            fix = ['FIX_SONAME'] if rel.endswith('.so') else []
+            print(';'.join([f'{rel}:{renamed[rel]}'] + args + fix))
             continue
-        print(';'.join([rel] + args))
+        prefix = '-' if PACKAGED_RC.fullmatch(rel) else ''
+        print(prefix + ';'.join([rel] + args))
 
 
 def is_elf(path):

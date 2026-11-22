@@ -275,7 +275,4 @@
         <transport>hwbinder</transport>
         <fqname>@1.0::IMiwillService/default</fqname>
     </hal>
-    <sepolicy>
-        <version>34.0</version>
-    </sepolicy>
 </manifest>

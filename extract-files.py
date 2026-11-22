@@ -20,11 +20,13 @@ from extract_utils.main import (
 )
 
 import os
+import re
 import subprocess
 import sys
 
 namespace_imports = [
     'device/xiaomi/degas',
+    'hardware/mediatek',
 ]
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -35,6 +37,7 @@ with open(os.path.join(here, 'stock-shadow-classes.txt')) as f:
     shadow_classes = dict(reversed(l.split()) for l in f
                           if l.strip() and not l.startswith('#'))
 v34_libs = tuple(sorted(n for n, c in shadow_classes.items() if c == 'v34'))
+v34_bins = tuple(sorted(n for n, c in shadow_classes.items() if c == 'v34bin'))
 
 # The other stock libraries sharing their name with a (system-only) source
 # module are kept as the stock binaries under <name>_vendor (see
@@ -116,8 +119,55 @@ def v34_blob_fixups():
     return fixups
 
 
+def renamed_files():
+    """(stock path, installed path) of the non-library files renamed to *-v34."""
+    with open(os.path.join(here, 'proprietary-files.txt')) as f:
+        for line in f:
+            spec = line.strip().split(';')[0]
+            if ':' in spec and not spec.endswith('.so'):
+                yield spec.split(':')
+
+
+def text_fixups(dump):
+    """Point the stock init scripts and XML files at renamed files.
+
+    The binaries of the v34bin class and the colliding config files are
+    installed under new names; every stock rc/xml that names them by path or
+    basename is patched (the import of init.mt6897.usb.rc, the jar path in
+    camera_extensions.xml, the service paths of the renamed HALs).
+    """
+    subs = []  # (regex, replacement)
+    for old, new in renamed_files():
+        ob, nb = os.path.basename(old), os.path.basename(new)
+        subs.append((r'(?<=[/}])%s(?![\w.@-])' % re.escape(ob), nb))
+    dst_of = dict(renamed_files())
+    per_file = {}
+    for part in ('vendor/etc', 'odm/etc'):
+        for root, _, names in os.walk(os.path.join(dump, part)):
+            for name in names:
+                if not name.endswith(('.rc', '.xml')):
+                    continue
+                path = os.path.join(root, name)
+                rel = os.path.relpath(path, dump)
+                with open(path, errors='replace') as f:
+                    text = f.read()
+                hits = [(p, r) for p, r in subs if re.search(p, text)]
+                if hits:
+                    per_file[dst_of.get(rel, rel)] = hits
+    fixups = {}
+    for rel, hits in per_file.items():
+        fixup = blob_fixup()
+        for p, r in hits:
+            fixup = fixup.regex_replace(p, r)
+        fixups[rel] = fixup
+    return fixups
+
+
+_dump = next((a for a in sys.argv[1:] if os.path.isdir(a)), None)
+
 blob_fixups: blob_fixups_user_type = {
     **v34_blob_fixups(),
+    **(text_fixups(_dump) if _dump else {}),
 }  # fmt: skip
 
 module = ExtractUtilsModule(

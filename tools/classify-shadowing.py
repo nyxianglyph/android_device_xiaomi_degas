@@ -65,8 +65,21 @@ for path, srcs in sources.items():
     if body is not None and re.search(
             r'^\s*(vendor|soc_specific|proprietary|device_specific):\s*true', body, re.M):
         # Same module name: the prefer'd prebuilt wins; otherwise build it.
-        cls = 'vendor' if mod == name else 'source'
-    elif kind in ('hidl_interface', 'aidl_interface'):
+        if mod != name:
+            cls = 'source'
+        elif bpdir.startswith('hardware/mediatek/') and '/bin/' in path and name == 'chipinfo':
+            cls = 'source'  # identical copy of the stock script and rc
+        elif bpdir.startswith('hardware/mediatek/'):
+            # Another namespace: prefer cannot work across namespaces, and
+            # overrides does not drop its install rule; install it renamed.
+            cls = 'v34bin' if '/bin/' in path else 'v34'
+        else:
+            cls = 'vendor'
+    elif kind == 'aidl_interface' or re.search(r'-V\d+-(ndk|cpp)$', name):
+        # Versioned AIDL: soong refuses two versions of one interface in a
+        # module's deps, so the stock blobs keep the version they were built with.
+        cls = 'v34'
+    elif kind == 'hidl_interface':
         cls = 'interface'
     elif '/bin/' in path:
         cls = 'source'

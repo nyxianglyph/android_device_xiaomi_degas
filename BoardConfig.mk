@@ -12,14 +12,14 @@ TARGET_ARCH := arm64
 TARGET_ARCH_VARIANT := armv8-2a-dotprod
 TARGET_CPU_ABI := arm64-v8a
 TARGET_CPU_VARIANT := generic
-TARGET_CPU_VARIANT_RUNTIME := cortex-a715
+TARGET_CPU_VARIANT_RUNTIME := cortex-a55
 
 TARGET_2ND_ARCH := arm
 TARGET_2ND_ARCH_VARIANT := armv8-2a
 TARGET_2ND_CPU_ABI := armeabi-v7a
 TARGET_2ND_CPU_ABI2 := armeabi
 TARGET_2ND_CPU_VARIANT := generic
-TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a520
+TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a55
 
 # Platform
 TARGET_BOARD_PLATFORM := mt6897
@@ -122,7 +122,7 @@ BOARD_USES_METADATA_PARTITION := true
 
 # Recovery
 TARGET_RECOVERY_FSTAB := $(DEVICE_PATH)/rootdir/etc/fstab.mt6897
-TARGET_RECOVERY_PIXEL_FORMAT := RGBX_8888
+TARGET_RECOVERY_PIXEL_FORMAT := BGRA_8888
 TARGET_RECOVERY_UI_MARGIN_HEIGHT := 102
 
 # Display
@@ -163,6 +163,8 @@ DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/vintf/manifest.xml
 DEVICE_MANIFEST_FILE += $(addprefix vendor/xiaomi/degas/proprietary/, \
     $(shell sed -n 's|^\(vendor/etc/vintf/[^;]*\);EXTRACT_ONLY$$|\1|p' $(DEVICE_PATH)/proprietary-files.txt))
 DEVICE_MATRIX_FILE := $(DEVICE_PATH)/vintf/compatibility_matrix.xml
+# Stock vendor HALs the HyperOS framework declared, see tools/gen-framework-matrix.py
+DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += $(DEVICE_PATH)/vintf/framework_compatibility_matrix.xml
 
 # Properties
 TARGET_VENDOR_PROP += $(DEVICE_PATH)/props/vendor.prop
