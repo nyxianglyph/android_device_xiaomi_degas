@@ -1,0 +1,17 @@
+# init.degas.rc switches GED to load based GPU frequency scaling.
+allow vendor_init sysfs_ged:dir search;
+allow vendor_init sysfs_ged:file w_file_perms;
+
+# Stock init files set the camera's MDP option.
+set_prop(vendor_init, vendor_mtkcam_prop)
+
+# Triggers of stock init files on properties vendor_init may not read
+# (sys.powerctl, vts.native_server.on), and a device node that is not there.
+dontaudit vendor_init { powerctl_prop vts_status_prop }:file r_file_perms;
+dontaudit vendor_init device:chr_file getattr;
+
+set_prop(vendor_init, vendor_batterysecret_prop)
+
+# MIUI properties of the stock init files (ro.miui.*, ro.product.camera.*)
+# that have no label here and nothing reads.
+dontaudit vendor_init default_prop:property_service set;

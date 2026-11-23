@@ -1,0 +1,2 @@
+# Set by the stock vendor init files; not labelled by the platform.
+ro.telephony.sim.count u:object_r:telephony_config_prop:s0 exact int

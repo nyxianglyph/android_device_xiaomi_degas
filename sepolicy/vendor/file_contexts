@@ -1,3 +1,6 @@
 # Device tree
 /(vendor|system/vendor)/bin/thermal-scenario\.sh                                  u:object_r:thermal_scenario_exec:s0
 /(vendor|system/vendor)/bin/hw/android\.hardware\.biometrics\.fingerprint-service\.xiaomi  u:object_r:hal_fingerprint_default_exec:s0
+
+# The socket init creates for vendor.bip_ap (init.bip_ap.rc).
+/dev/socket/vendor\.bip_ap                                                        u:object_r:vendor_bip_socket:s0

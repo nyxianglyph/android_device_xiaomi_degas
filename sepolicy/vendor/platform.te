@@ -1,0 +1,35 @@
+# Platform domains on this phone's files.
+
+# vold wants to trim the persist partition as well; the platform policy
+# keeps vold out of it.
+dontaudit vold persist_data_file:dir { open read ioctl };
+
+# make_f2fs asks the block layer about the disk when it formats userdata.
+allow e2fs sysfs_devices_block:dir search;
+allow e2fs sysfs_devices_block:file r_file_perms;
+
+# Memory statistics in Settings.
+allow system_app sysfs_zram:file r_file_perms;
+
+# An init file of the stock vendor makes a directory for the modem database
+# of MediaTek's logging tools under /data/vendor_de, which only vold may
+# write to.
+dontaudit vendor_init vendor_userdir_file:dir { write add_name };
+dontaudit vendor_init default_prop:file r_file_perms;
+
+# writepid of the gralloc allocator and composer services.
+allow init sysfs_reserve_pool:file w_file_perms;
+allow init proc_binder_prio:file w_file_perms;
+
+# The rescue partition is checked before it is mounted.
+allow fsck rescue_block_device:blk_file rw_file_perms;
+
+# The kernel's RFCOMM thread; Android's Bluetooth stack does not use it.
+dontaudit kernel self:capability net_bind_service;
+
+# Vendor libraries loaded into these read properties that have no label.
+dontaudit { audioserver surfaceflinger mediaserver } vendor_default_prop:file r_file_perms;
+
+# The cached app optimizer walks /proc and meets directories the vendor
+# policy labels.
+dontaudit system_server { proc_irq qti_proc_sla }:dir search;

@@ -1,3 +1,9 @@
 # Factory opcust partition (carrier.prop), mounted read-only at /opcust in
 # first stage. Its files carry this label in their xattrs.
 type opcust_file, file_type;
+
+# Nodes the gralloc allocator and composer services register their pid with
+# (writepid in their init files): a memory pool reserved for them and the
+# binder priority of the allocator.
+type sysfs_reserve_pool, fs_type, sysfs_type;
+type proc_binder_prio, fs_type, proc_type;

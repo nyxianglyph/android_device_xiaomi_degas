@@ -1,0 +1,2 @@
+# mtectrl looks for the fstab in the device tree, where this phone has none.
+dontaudit mtectrl sysfs_dt_firmware_android:file r_file_perms;

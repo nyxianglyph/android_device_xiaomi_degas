@@ -1,0 +1,6 @@
+# Wakeup source statistics. The drivers of this phone register well over a
+# hundred wakeup sources under device paths that carry no label of their own;
+# the ones of the charger, gauge and PMIC are labelled in genfs_contexts, the
+# rest stay out of the statistics (the platform keeps core domains away from
+# unlabelled sysfs files).
+dontaudit system_suspend sysfs:file r_file_perms;

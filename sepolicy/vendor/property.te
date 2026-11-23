@@ -1,0 +1,3 @@
+# persist.vendor.accelerate.charge: batterysecret records whether the
+# battery passed authentication, the charger driver side reads it.
+vendor_internal_prop(vendor_batterysecret_prop)

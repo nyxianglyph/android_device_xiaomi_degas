@@ -1,0 +1,32 @@
+# DisplayPort audio jack state, read by system_server.
+genfscon sysfs /devices/platform/soc/11e10000.dp-tx/extcon u:object_r:sysfs_extcon:s0
+genfscon sysfs /kernel/reserve_pool u:object_r:sysfs_reserve_pool:s0
+genfscon proc /sys/binder_prio u:object_r:proc_binder_prio:s0
+
+# Wakeup sources of the charger, fuel gauge and PMIC drivers. Stock labels
+# them by number, which differs on this kernel; a prefix covers any number.
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-master-charger/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-mst-div-chg/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-mst-hvdiv-chg/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-slv-div-chg/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-slv-hvdiv-chg/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/usb/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/11b72000.i2c/i2c-10/10-0055/power_supply/bms/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/soc/1cc04000.spmi/spmi-0/0-06/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/virtual/power_supply/mtk-gauge/wakeup u:object_r:sysfs_wakeup:s0
+
+# The charge pump supplies the health HAL reads next to the battery.
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-mst-hvdiv-chg u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-mst-div-chg u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-slv-hvdiv-chg u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-slv-div-chg u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/charger_gl/power_supply/mtk-master-charger u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/11cc2000.i2c/i2c-12/12-006c/power_supply/cp_master u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/11cc3000.i2c/i2c-13/13-006a/power_supply/cp_slave u:object_r:sysfs_power_supply:s0
+
+# The audio DSP's wakeup source.
+genfscon sysfs /devices/platform/soc/1e000000.adspsys/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/11f01000.i2c/i2c-5/5-0034/11f01000.i2c:mt6375@34:chg/power_supply/primary_chg u:object_r:sysfs_power_supply:s0
+genfscon sysfs /devices/platform/11cc2000.i2c/i2c-12/12-006c/power_supply/cp_master/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/11cc3000.i2c/i2c-13/13-006a/power_supply/cp_slave/wakeup u:object_r:sysfs_wakeup:s0
+genfscon sysfs /devices/platform/11f01000.i2c/i2c-5/5-0034/11f01000.i2c:mt6375@34:chg/power_supply/primary_chg/wakeup u:object_r:sysfs_wakeup:s0

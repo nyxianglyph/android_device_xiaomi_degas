@@ -1,0 +1,56 @@
+# Additions to the carried stock policy (sepolicy/stock), from the denials of
+# the stock services on this build.
+
+# Under-display light sensor: reads the frame buffer to subtract the screen's
+# own light.
+allow vendor_hal_citsensorservice_xiaomi_default dmabuf_system_heap_device:chr_file r_file_perms;
+allow vendor_hal_citsensorservice_xiaomi_default dmabuf_system_secure_heap_device:chr_file r_file_perms;
+
+# Reads the panel brightness to choose its limits.
+allow mi_thermald vendor_sysfs_displayfeature:dir search;
+allow mi_thermald vendor_sysfs_displayfeature:file r_file_perms;
+
+allow batterysecret kmsg_device:chr_file getattr;
+
+# MediaTek's power HAL reports to mbrain. Stock has these rules in its
+# system_ext policy, which is not part of this build.
+binder_use(mtk_hal_mbrain)
+add_service(mtk_hal_mbrain, mtk_hal_mbrain_service)
+binder_call(mtk_hal_power, mtk_hal_mbrain)
+allow mtk_hal_power mtk_hal_mbrain_service:service_manager find;
+
+get_prop(mtk_hal_camera, camera_config_prop)
+
+# Properties without a label of their own. Stock denies these too.
+dontaudit mi_thermald vendor_default_prop:property_service set;
+dontaudit vendor_hal_citsensorservice_xiaomi_default vendor_default_prop:property_service set;
+dontaudit { rild hal_mtdservice_default } default_prop:file r_file_perms;
+
+# modprobe links the module signing keyring.
+allow init_insmod_sh self:key write;
+
+# Haptics calibration on the persist partition.
+allow hal_vibrator_default mnt_vendor_file:dir search;
+allow hal_vibrator_default persist_data_file:dir search;
+allow hal_vibrator_default persist_data_file:file r_file_perms;
+
+r_dir_file(fuelgauged_nvram, sysfs_dt_firmware_android)
+
+# Follows the thermal configuration mi_thermald writes.
+allow mtk_hal_power thermal_core_data_file:dir { r_dir_perms watch };
+
+allow mi_thermald sysfs_thermal_sram:dir search;
+
+# Debug dump locations and unlabelled properties the camera, audio, radio
+# and composer services probe.
+dontaudit mtk_hal_camera { shell_data_file system_data_file }:dir search;
+dontaudit { mtk_hal_camera hal_audio_default } default_prop:file r_file_perms;
+dontaudit hal_graphics_composer_default system_prop:file r_file_perms;
+dontaudit rild { default_prop vendor_default_prop }:property_service set;
+
+# Waits for sys.boot_completed.
+get_prop(mtk_hal_mmlpq, boot_status_prop)
+
+set_prop(batterysecret, vendor_batterysecret_prop)
+dontaudit mtk_hal_mbrain default_prop:file r_file_perms;
+dontaudit hal_touchfeature_xiaomi_default default_prop:file r_file_perms;
