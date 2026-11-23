@@ -55,14 +55,12 @@ interface android.hardware.sensors@2.0
 interface android.hardware.sensors@2.1
 interface android.hidl.allocator@1.0
 interface android.system.wifi.keystore@1.0
-interface audioclient-types-aidl-cpp
-interface av-types-aidl-cpp
-interface framework-permission-aidl-cpp
-interface shared-file-region-aidl-cpp
 interface vendor.mediatek.hardware.mtkpower@1.0
 interface vendor.mediatek.hardware.mtkpower@1.1
 interface vendor.mediatek.hardware.mtkpower@1.2
 interface vendor.nxp.nxpese@1.0
+interface vendor.xiaomi.hardware.displayfeature@1.0
+interface vendor.xiaomi.hardware.fx.tunnel@1.0
 source android.hardware.drm-service.clearkey
 source boringssl_self_test64
 source chipinfo
@@ -143,6 +141,9 @@ v34 android.media.audio.common.types-V2-ndk
 v34 android.media.soundtrigger.types-V1-ndk
 v34 android.se.omapi-V1-ndk
 v34 android.system.keystore2-V1-ndk
+v34 audioclient-types-aidl-cpp
+v34 av-types-aidl-cpp
+v34 framework-permission-aidl-cpp
 v34 lib_android_keymaster_keymint_utils
 v34 libaedv
 v34 libalsautils
@@ -195,6 +196,7 @@ v34 libtflite
 v34 libtrusty
 v34 libultrahdr
 v34 libvibratorutils
+v34 shared-file-region-aidl-cpp
 v34 vendor.mediatek.hardware.audio-V1-ndk
 v34 vendor.nxp.nxpnfc_aidl-V1-ndk
 v34bin android.hardware.audio.service.mediatek

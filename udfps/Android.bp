@@ -1,0 +1,18 @@
+//
+// Copyright (C) 2026 nyxianglyph
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// Loaded by android.hardware.biometrics.fingerprint-service.xiaomi.
+cc_library_shared {
+    name: "libudfpshandler",
+    defaults: ["//hardware/xiaomi:xiaomi_hardware_biometrics_config_default"],
+    vendor: true,
+    srcs: ["UdfpsHandler.cpp"],
+    shared_libs: [
+        "android.hardware.biometrics.fingerprint-V4-ndk",
+        "libbase",
+    ],
+    header_libs: ["//hardware/xiaomi:xiaomifingerprint_headers"],
+}

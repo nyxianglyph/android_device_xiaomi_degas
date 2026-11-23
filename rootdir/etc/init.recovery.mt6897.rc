@@ -1,0 +1,11 @@
+# Recovery init for the Xiaomi 14T (degas)
+#
+# Copyright (C) 2026 nyxianglyph
+#
+# SPDX-License-Identifier: Apache-2.0
+
+on init
+    # The GKI kernel has no android_usb driver; recovery's adb, sideload and
+    # fastbootd gadgets must be built through configfs on the MediaTek UDC.
+    setprop sys.usb.configfs 1
+    setprop sys.usb.controller "11201000.usb0"

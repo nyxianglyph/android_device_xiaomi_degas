@@ -21,6 +21,13 @@ TARGET_2ND_CPU_ABI2 := armeabi
 TARGET_2ND_CPU_VARIANT := generic
 TARGET_2ND_CPU_VARIANT_RUNTIME := cortex-a55
 
+# mediaserver and drmserver are 32-bit by default on a target with a second
+# architecture. The stock vendor image has its gralloc mapper for 64-bit
+# only, so a 32-bit mediaserver aborts as soon as it maps a decoded frame
+# (video thumbnails). Build both; ro.zygote=zygote64 starts the 64-bit ones.
+TARGET_DYNAMIC_64_32_MEDIASERVER := true
+TARGET_DYNAMIC_64_32_DRMSERVER := true
+
 # Platform
 TARGET_BOARD_PLATFORM := mt6897
 TARGET_BOOTLOADER_BOARD_NAME := degas
@@ -62,8 +69,11 @@ BOARD_MKBOOTIMG_ARGS += --ramdisk_offset $(BOARD_RAMDISK_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --tags_offset $(BOARD_KERNEL_TAGS_OFFSET)
 BOARD_MKBOOTIMG_ARGS += --dtb_offset $(BOARD_DTB_OFFSET)
 BOARD_KERNEL_CMDLINE := bootopt=64S3,32N2,64N2
-# Bring-up only: collect denials with SELinux permissive, then remove this.
-BOARD_BOOTCONFIG := androidboot.selinux=permissive
+# No BOARD_BOOTCONFIG: stock and the working TWRP have no vendor bootconfig
+# section, so keep the vendor_boot layout the same and use the cmdline.
+# Beta: the SELinux policy for the stock vendor services is not complete yet.
+# Permissive until it is.
+BOARD_KERNEL_CMDLINE += androidboot.selinux=permissive
 
 BOARD_INCLUDE_DTB_IN_BOOTIMG := true
 BOARD_RAMDISK_USE_LZ4 := true
@@ -73,10 +83,15 @@ BOARD_MOVE_RECOVERY_RESOURCES_TO_VENDOR_BOOT := true
 BOARD_INCLUDE_RECOVERY_RAMDISK_IN_VENDOR_BOOT := true
 
 # Kernel (prebuilt from github.com/nyxianglyph/android_kernel_xiaomi_degas, branch android-6.1.157)
-TARGET_PREBUILT_KERNEL := $(KERNEL_PATH)/Image
+# lk only boots a compressed kernel ("No magic number of compression is
+# found!"); stock uses legacy LZ4 (lz4 -l).
+TARGET_PREBUILT_KERNEL := $(KERNEL_PATH)/Image.lz4
 BOARD_PREBUILT_DTBIMAGE_DIR := $(KERNEL_PATH)/dtb
-BOARD_PREBUILT_DTBOIMAGE := $(KERNEL_PATH)/dtbo.img
-BOARD_KERNEL_IMAGE_NAME := Image
+# lk refuses a dtbo without the MediaTek cert chain, even unlocked. The
+# overlays of the kernel build are byte-identical to stock, so ship the signed
+# stock dtbo (Global OS3.0.305.0.WNEMIXM, AVB footer stripped).
+BOARD_PREBUILT_DTBOIMAGE := $(DEVICE_PATH)/prebuilt/dtbo.img
+BOARD_KERNEL_IMAGE_NAME := Image.lz4
 
 # Kernel modules: vendor_boot and vendor_dlkm are the stock vendor modules, system_dlkm
 # are the GKI modules of the same kernel build (signed with its key).
@@ -92,6 +107,9 @@ BOARD_SYSTEM_KERNEL_MODULES_LOAD := $(strip $(shell cat $(DEVICE_PATH)/modules/s
 BOARD_FLASH_BLOCK_SIZE := 262144
 BOARD_BOOTIMAGE_PARTITION_SIZE := 67108864
 BOARD_INIT_BOOT_IMAGE_PARTITION_SIZE := 8388608
+# init_boot does not take BOARD_MKBOOTIMG_ARGS; without this it gets a v0
+# header, which lk reads as v4 and then asserts on the bogus ramdisk size.
+BOARD_MKBOOTIMG_INIT_ARGS += --header_version 4
 BOARD_VENDOR_BOOTIMAGE_PARTITION_SIZE := 67108864
 BOARD_DTBOIMG_PARTITION_SIZE := 8388608
 
@@ -130,17 +148,21 @@ TARGET_SCREEN_DENSITY := 480
 
 # Verified boot
 BOARD_AVB_ENABLE := true
-BOARD_AVB_MAKE_VBMETA_IMAGE_ARGS += --flags 3
+# lk accepts only 2048-bit vbmeta keys ("[AVB] invalid pubk size" with RSA4096),
+# and MiTEE KeyMint takes its root of trust from that verification, so sign
+# like stock: RSA2048, verification on, vbmeta_vendor at rollback location 4.
+BOARD_AVB_ALGORITHM := SHA256_RSA2048
+BOARD_AVB_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
 BOARD_AVB_VBMETA_SYSTEM := product system system_ext
-BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
-BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA4096
+BOARD_AVB_VBMETA_SYSTEM_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
+BOARD_AVB_VBMETA_SYSTEM_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
 BOARD_AVB_VBMETA_SYSTEM_ROLLBACK_INDEX_LOCATION := 2
 BOARD_AVB_VBMETA_VENDOR := odm vendor
-BOARD_AVB_VBMETA_VENDOR_KEY_PATH := external/avb/test/data/testkey_rsa4096.pem
-BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA4096
+BOARD_AVB_VBMETA_VENDOR_KEY_PATH := external/avb/test/data/testkey_rsa2048.pem
+BOARD_AVB_VBMETA_VENDOR_ALGORITHM := SHA256_RSA2048
 BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX := $(PLATFORM_SECURITY_PATCH_TIMESTAMP)
-BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 3
+BOARD_AVB_VBMETA_VENDOR_ROLLBACK_INDEX_LOCATION := 4
 
 # The boot images carry the stock HyperOS AVB props, otherwise MiTEE KeyMint
 # rejects the metadata encryption key.
@@ -160,8 +182,10 @@ BOARD_AVB_VENDOR_BOOT_ADD_HASH_FOOTER_ARGS += \
 DEVICE_MANIFEST_FILE += $(DEVICE_PATH)/vintf/manifest.xml
 # Stock VINTF fragments named like a source module cannot be packaged or
 # copied (see tools/gen-proprietary-files.py); merge them into the manifest.
+# The clearkey DRM HAL is built from source (device.mk) with its own fragment.
 DEVICE_MANIFEST_FILE += $(addprefix vendor/xiaomi/degas/proprietary/, \
-    $(shell sed -n 's|^\(vendor/etc/vintf/[^;]*\);EXTRACT_ONLY$$|\1|p' $(DEVICE_PATH)/proprietary-files.txt))
+    $(filter-out vendor/etc/vintf/manifest/android.hardware.drm-service.clearkey.xml, \
+    $(shell sed -n 's|^\(vendor/etc/vintf/[^;]*\);EXTRACT_ONLY$$|\1|p' $(DEVICE_PATH)/proprietary-files.txt)))
 DEVICE_MATRIX_FILE := $(DEVICE_PATH)/vintf/compatibility_matrix.xml
 # Stock vendor HALs the HyperOS framework declared, see tools/gen-framework-matrix.py
 DEVICE_FRAMEWORK_COMPATIBILITY_MATRIX_FILE += $(DEVICE_PATH)/vintf/framework_compatibility_matrix.xml

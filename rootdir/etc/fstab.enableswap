@@ -1,0 +1,2 @@
+# zram swap, enabled by init.mt6897.rc after boot (swapon_all)
+/dev/block/zram0 none swap defaults zramsize=100%

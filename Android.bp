@@ -34,3 +34,54 @@ prebuilt_etc {
     sub_dir: "camera/mt6989",
     vendor: true,
 }
+
+// VNDK v34 libraries a few stock blobs need under their own names, see
+// tools/gen-vndk-v34.py. Their links to each other are renamed already.
+
+cc_prebuilt_library_shared {
+    name: "libbase-v34",
+    srcs: ["prebuilt/vndk-v34/lib64/libbase-v34.so"],
+    compile_multilib: "64",
+    vendor: true,
+    check_elf_files: false,
+    strip: {
+        none: true,
+    },
+}
+
+
+cc_prebuilt_library_shared {
+    name: "libcrypto-v34",
+    srcs: ["prebuilt/vndk-v34/lib64/libcrypto-v34.so"],
+    compile_multilib: "64",
+    vendor: true,
+    check_elf_files: false,
+    strip: {
+        none: true,
+    },
+}
+
+
+
+cc_prebuilt_library_shared {
+    name: "libssl-v34",
+    srcs: ["prebuilt/vndk-v34/lib64/libssl-v34.so"],
+    compile_multilib: "64",
+    vendor: true,
+    check_elf_files: false,
+    strip: {
+        none: true,
+    },
+}
+
+cc_prebuilt_library_shared {
+    name: "libstagefright_bufferqueue_helper-v34",
+    srcs: ["prebuilt/vndk-v34/lib64/libstagefright_bufferqueue_helper-v34.so"],
+    compile_multilib: "64",
+    vendor: true,
+    check_elf_files: false,
+    strip: {
+        none: true,
+    },
+}
+

@@ -1,0 +1,18 @@
+//
+// Copyright (C) 2026 nyxianglyph
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// The one class of the HyperOS framework that the stock MediaTek IMS jars
+// reference. On the boot class path, next to those jars.
+java_library {
+    name: "degas-telephony-stub",
+    installable: true,
+    system_ext_specific: true,
+    use_generic_config: true,
+
+    srcs: [
+        "src/**/*.java",
+    ],
+}

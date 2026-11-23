@@ -1,0 +1,19 @@
+# Device nodes the HyperOS system ueventd.rc sets up and AOSP's does not.
+#
+# Copyright (C) 2026 nyxianglyph
+#
+# SPDX-License-Identifier: Apache-2.0
+
+# The Xiaomi display feature device (local HBM, DC dimming, panel info); the
+# stock display and fingerprint code opens /dev/mi_display/disp_feature.
+subsystem mi_display
+    devname uevent_devpath
+    dirname /dev/mi_display
+
+/dev/mi_display/*         0666   root       graphics
+
+# Sensor hub IIO devices
+/dev/iio:device*          0660   system     system
+/sys/bus/iio/devices/iio:device* buffer/enable                  0600 system system
+/sys/bus/iio/devices/iio:device* scan_elements/in_proximity_en  0600 system system
+/sys/bus/iio/devices/iio:device* scan_elements/in_timestamp_en  0600 system system

@@ -27,6 +27,7 @@ import sys
 namespace_imports = [
     'device/xiaomi/degas',
     'hardware/mediatek',
+    'hardware/xiaomi',
 ]
 
 here = os.path.dirname(os.path.abspath(__file__))
@@ -82,9 +83,16 @@ lib_fixups: lib_fixups_user_type = {
 }
 
 
+# VNDK libraries whose ABI changed without any symbol going missing, so
+# tools/check-vendor-deps.py cannot see it: every stock user is pointed at
+# the -v34 copy from hardware/lineage/compat. With today's libtinyxml2 the PQ,
+# power and miperf services crash while parsing their XML tables.
+COMPAT_V34 = ('libtinyxml2',)
+
+
 def v34_users(dump):
     """Stock vendor/odm ELFs that need a library renamed to <name>-v34.so."""
-    names = {f'{n}.so' for n in v34_libs}
+    names = {f'{n}.so' for n in v34_libs + COMPAT_V34}
     users = {}
     with open(os.path.join(here, 'proprietary-files.txt')) as f:
         # (stock path, installed path); fixups are keyed by the installed one.
@@ -106,15 +114,76 @@ def v34_users(dump):
     return users
 
 
+# Stock blobs that use symbols today's VNDK libraries no longer export (found
+# by tools/check-vendor-deps.py), or that share objects with such a blob; they
+# link the v34 copies installed by tools/gen-vndk-v34.py instead.
+VNDK_V34_USERS = {
+    'odm/bin/hw/vendor.xiaomi.sensor.citsensorservice.aidl': ('libui.so',),
+    'vendor/bin/hw/wpa_supplicant': ('libcrypto.so', 'libssl.so'),
+    'vendor/lib64/hw/mt6897/vendor.mediatek.hardware.pq_aidl-impl.so': ('libui.so',),
+    # The Codec2 services: libcodec2_vndk-v34 needs the v34 libui, and every
+    # other library of those processes that touches android::GraphicBuffer has
+    # to use the same one. With both libui versions loaded the class has two
+    # layouts under one symbol name; the decoder then crashed in
+    # C2BufferQueueBlockPool::fetchFromIgbp_l() as soon as it decoded to a
+    # surface.
+    'vendor/lib64/libcodec2_fsr.so': ('libui.so',),
+    'vendor/lib64/libcodec2_hidl@1.0-v34.so': ('libstagefright_bufferqueue_helper.so', 'libui.so'),
+    'vendor/lib64/libcodec2_hidl@1.1-v34.so': ('libstagefright_bufferqueue_helper.so', 'libui.so'),
+    'vendor/lib64/libcodec2_hidl@1.2-v34.so': ('libstagefright_bufferqueue_helper.so', 'libui.so'),
+    'vendor/lib64/libcodec2_mtk_vdec.so': ('libui.so',),
+    'vendor/lib64/libcodec2_mtk_venc.so': ('libui.so',),
+    'vendor/lib64/libcodec2_vndk-v34.so': ('libui.so',),
+    'vendor/lib64/libcodec2_vpp_AIMEMC_plugin.so': ('libui.so',),
+    'vendor/lib64/libcodec2_vpp_AISR_plugin.so': ('libui.so',),
+    'vendor/lib64/libkeymint_remote_prov_support-v34.so': ('libbase.so',),
+    'vendor/lib64/libmicamera_hal_core.so': ('libui.so',),
+}
+
+
+# Stock blobs that only miss a few symbols; the hardware/lineage/compat shims
+# add them back.
+SHIM_USERS = {
+    'vendor/bin/pnscr': 'libbase_shim.so',  # android::base::Trim(std::string)
+    'vendor/bin/pnscr-sst': 'libbase_shim.so',
+    'vendor/lib64/libcameraopt.so': 'libprocessgroup_shim.so',  # SetTaskProfiles
+    # android::binder::atrace_begin/atrace_end
+    'vendor/lib64/framework-permission-aidl-cpp-v34.so': 'libbinder_shim.so',
+}
+
+
+# Stock AIDL NDK libraries that must not be loaded next to the version the
+# framework side uses: every version defines the same symbols, the first one
+# loaded wins, and libui then calls IAllocator methods the V1 proxy does not
+# have (camerahalserver died in android::waitForAllocator()). Their users are
+# linked against the current version instead of the -v34 copy.
+AIDL_BUMP = {
+    'android.hardware.graphics.allocator-V1-ndk.so':
+        'android.hardware.graphics.allocator-V2-ndk.so',
+}
+
+
 def v34_blob_fixups():
     dump = next((a for a in sys.argv[1:] if os.path.isdir(a)), None)
     if dump is None:
         return {}
-    fixups = {}
+    renames = {}  # installed path -> libraries to rename to <name>-v34.so
     for hits, rels in v34_users(dump).items():
+        for rel in rels:
+            renames.setdefault(rel, set()).update(hits)
+    for rel, hits in VNDK_V34_USERS.items():
+        renames.setdefault(rel, set()).update(hits)
+    groups = {}
+    for rel in sorted(set(renames) | set(SHIM_USERS)):
+        key = (tuple(sorted(renames.get(rel, ()))), SHIM_USERS.get(rel))
+        groups.setdefault(key, []).append(rel)
+    fixups = {}
+    for (hits, shim), rels in groups.items():
         fixup = blob_fixup()
         for name in hits:
-            fixup = fixup.replace_needed(name, name[:-3] + '-v34.so')
+            fixup = fixup.replace_needed(name, AIDL_BUMP.get(name, name[:-3] + '-v34.so'))
+        if shim:
+            fixup = fixup.add_needed(shim)
         fixups[tuple(rels)] = fixup
     return fixups
 
@@ -168,6 +237,10 @@ _dump = next((a for a in sys.argv[1:] if os.path.isdir(a)), None)
 blob_fixups: blob_fixups_user_type = {
     **v34_blob_fixups(),
     **(text_fixups(_dump) if _dump else {}),
+    # Keep the permission rules of the stock fingerprint rc, but not its
+    # service: mfp-daemon is replaced (see tools/gen-proprietary-files.py).
+    'vendor/etc/init/init.mfp-daemon.aidl.rc': blob_fixup()
+        .regex_replace(r'service mfp-daemon [^\n]*\n(?:[ \t]+[^\n]*\n)+', ''),
 }  # fmt: skip
 
 module = ExtractUtilsModule(

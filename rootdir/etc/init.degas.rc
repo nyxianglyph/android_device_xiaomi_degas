@@ -1,0 +1,25 @@
+#
+# Copyright (C) 2026 nyxianglyph
+#
+# SPDX-License-Identifier: Apache-2.0
+#
+
+# GPU frequency scaling. MediaTek's GED driver scales the GPU on the frame
+# timing that the BufferQueue of MediaTek's own framework reports to it. AOSP
+# reports nothing, and the GPU then stays at its lowest frequency (265 MHz)
+# at any load. In timer based mode GED scales on the GPU load instead. The
+# setting survives display off; it is written twice because the module is
+# loaded while init is already past early boot.
+on boot
+    write /sys/module/ged/parameters/g_gpu_timer_based_emu 1
+
+on property:sys.boot_completed=1
+    write /sys/module/ged/parameters/g_gpu_timer_based_emu 1
+    start vendor.thermal_scenario
+
+# See thermal-scenario.sh.
+service vendor.thermal_scenario /vendor/bin/thermal-scenario.sh
+    class late_start
+    user system
+    group system
+    disabled

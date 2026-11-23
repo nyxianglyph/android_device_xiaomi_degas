@@ -1,0 +1,15 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+     SPDX-License-Identifier: Apache-2.0
+-->
+<carrier_config_list>
+    <!-- Every SIM. AOSP only allows VoLTE for carriers its own configuration
+         lists it for, and that list misses carriers the modem supports (Turk
+         Telekom, for one). MediaTek's default is the other way round: VoLTE is
+         available, and the modem decides per SIM whether IMS is used
+         (persist.vendor.mtk_dynamic_ims_switch). -->
+    <carrier_config>
+        <boolean name="carrier_volte_available_bool" value="true" />
+    </carrier_config>
+</carrier_config_list>

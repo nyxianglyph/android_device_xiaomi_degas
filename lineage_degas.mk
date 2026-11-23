@@ -12,6 +12,16 @@ ZYGOTE_FORCE_64 := true
 $(call inherit-product, $(SRC_TARGET_DIR)/product/core_64_bit.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/full_base_telephony.mk)
 $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/vabc_features.mk)
+# First-stage tools: snapuserd for VABC merges in the generic ramdisk
+# (init_boot), and linker/e2fsck/fsck.f2fs in the vendor ramdisk, like stock.
+$(call inherit-product, $(SRC_TARGET_DIR)/product/generic_ramdisk.mk)
+$(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch_with_vendor_ramdisk.mk)
+
+# Cross-window blur makes SurfaceFlinger compose with the GPU, which does not
+# fit the 144 Hz frame time on this panel (about half the frames were late
+# while a blurred surface was on screen).
+# Read by vendor/lineage's crdroid.mk, so it has to come before it.
+TARGET_SUPPORTS_BLUR := false
 
 $(call inherit-product, device/xiaomi/degas/device.mk)
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
@@ -37,4 +47,3 @@ BUILD_FINGERPRINT := Xiaomi/degas_global/degas:16/BP2A.250605.031.A3/OS3.0.305.0
 # crDroid
 TARGET_BOOT_ANIMATION_RES := 1080
 TARGET_HAS_UDFPS := true
-TARGET_ENABLE_BLUR := true

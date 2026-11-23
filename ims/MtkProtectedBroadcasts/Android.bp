@@ -1,0 +1,13 @@
+//
+// Copyright (C) 2026 nyxianglyph
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// See AndroidManifest.xml. No code, no resources.
+android_app {
+    name: "MtkProtectedBroadcasts",
+    system_ext_specific: true,
+    certificate: "platform",
+    sdk_version: "current",
+}

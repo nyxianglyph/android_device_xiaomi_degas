@@ -75,9 +75,12 @@ for path, srcs in sources.items():
             cls = 'v34bin' if '/bin/' in path else 'v34'
         else:
             cls = 'vendor'
-    elif kind == 'aidl_interface' or re.search(r'-V\d+-(ndk|cpp)$', name):
+    elif kind == 'aidl_interface' or re.search(r'-(V\d+-(ndk|cpp)|aidl-(ndk|cpp))$', name):
         # Versioned AIDL: soong refuses two versions of one interface in a
         # module's deps, so the stock blobs keep the version they were built with.
+        # Unversioned (unstable) AIDL libraries such as audioclient-types-aidl-cpp
+        # have no frozen ABI at all: today's build drops classes the stock audio
+        # stack links (android::media::AudioAttributesInternal).
         cls = 'v34'
     elif kind == 'hidl_interface':
         cls = 'interface'

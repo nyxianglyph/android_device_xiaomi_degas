@@ -1,0 +1,9 @@
+# thermal-scenario.sh: picks mi_thermald's scenario from the board temperature.
+type thermal_scenario, domain;
+type thermal_scenario_exec, exec_type, vendor_file_type, file_type;
+init_daemon_domain(thermal_scenario)
+
+allow thermal_scenario vendor_shell_exec:file rx_file_perms;
+allow thermal_scenario vendor_toolbox_exec:file rx_file_perms;
+allow thermal_scenario sysfs_therm:dir r_dir_perms;
+allow thermal_scenario sysfs_therm:file rw_file_perms;

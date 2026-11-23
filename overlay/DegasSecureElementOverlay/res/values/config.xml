@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+
+    <!-- Register the vendor-stable OMAPI service
+         (android.se.omapi.ISecureElementService/default). The StrongBox
+         KeyMint HAL reaches its applet on the embedded secure element only
+         through it. Without it every StrongBox request fails, and keystore2
+         cannot agree on the shared authentication key at boot for about a
+         minute: the lock screen rejects the correct PIN during that time. -->
+    <bool name="secure_element_vintf_enabled">true</bool>
+
+</resources>

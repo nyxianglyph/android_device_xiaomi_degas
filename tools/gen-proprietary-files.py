@@ -46,6 +46,22 @@ EXCLUDE = [
     r'vendor/bin/hw/android\.hardware\.cas-service\.example',
     r'vendor/etc/init/cas-default\.rc',
     r'vendor/etc/vintf/manifest/android\.hardware\.cas-service\.xml',
+    # The stock fingerprint service; android.hardware.biometrics.fingerprint-
+    # service.xiaomi (hardware/xiaomi) drives the Goodix HAL module instead,
+    # with udfps/ doing what the HyperOS framework did on a press. The rc file
+    # stays for its permission rules, extract-files.py drops the service.
+    r'vendor/bin/hw/mfp-daemon',
+    r'vendor/etc/vintf/manifest/(AHBF-V3-service|fod-aidl)\.xml',
+    # Fingerprint dump tool of the stock fingerprint service; its interface
+    # was declared in fod-aidl.xml.
+    r'odm/bin/hw/vendor\.xiaomi\.hardware\.dtool1-service',
+    r'odm/etc/init/vendor\.xiaomi\.hardware\.dtool1\.rc',
+    # Factory and service tools that write outside the Android partitions:
+    # MI_RIC and MI_IC keep memory statistics in the gsort partition, ffu
+    # updates the UFS firmware, ddr_training.rc clears boot_para. This ROM
+    # never writes there, so they are not shipped at all.
+    r'vendor/bin/(MI_RIC|MI_IC|ffu)',
+    r'vendor/etc/init/(mi_ric|mi_ic|ffu|ddr_training)\.rc',
     # Glob characters cannot be build paths. The only such stock files are
     # the SR*.dla video super-resolution models of the HyperOS system side,
     # which no vendor component uses.
@@ -58,7 +74,12 @@ SYSTEM_EXT = [
     # hardware/mediatek instead (AOSP-framework builds of the same classes).
     r'system_ext/framework/mediatek-(ims-base|ims-common|ims-extension-plugin|telephony-base)\.jar',
     r'system_ext/priv-app/ImsService/.*',
+    # GBA authentication for the supplementary services of IMS (XCAP).
+    r'system_ext/priv-app/MtkGbaService/.*',
     r'system_ext/lib64/libimsma.*\.so',
+    # JNI library of the ImsService's video call provider; the service loads
+    # it at start whether video calls are used or not.
+    r'system_ext/lib64/libmtk_vt_wrapper\.so',
     # Dependency closure of libimsma_rtp.
     r'system_ext/lib64/lib(signal|sink|source|comutils|vcodec_cap|vcodec_capenc|vt_avsync)\.so',
     r'system_ext/lib64/vendor\.mediatek\.hardware\.videotelephony.*\.so',
@@ -70,6 +91,23 @@ SYSTEM_EXT = [
 # the shell config of the source build, and the rc of a service that comes
 # from the source build.
 DROP_ON_COLLISION = re.compile(r'vendor/etc/mkshrc|vendor/etc/init/android\.hardware\.drm-service\.clearkey\.rc')
+
+
+# Stock files installed under another name.
+INSTALL_AS = {
+    # hw_get_module_by_class() only finds <id>.<class>.<variant>.so.
+    'odm/lib64/hw/fingerprint.goodix_fod.so': 'odm/lib64/hw/fingerprint.goodix_fod.default.so',
+}
+
+
+# Stock jars device.mk puts on the boot class path. The tag makes
+# extract-utils declare them generic, which the system image check demands of
+# every boot jar outside /system.
+BOOT_JARS = {
+    'system_ext/framework/mediatek-ims-base.jar',
+    'system_ext/framework/mediatek-ims-common.jar',
+    'system_ext/framework/mediatek-telephony-base.jar',
+}
 
 
 def v34_name(rel):
@@ -205,6 +243,8 @@ def main():
         elif cls == 'v34bin':
             renamed[rel] = rel + '-v34'
 
+    renamed.update({rel: dst for rel, dst in INSTALL_AS.items() if rel in files})
+
     suffixes = lib_suffixes(files)
     shadowing = set()
     if len(sys.argv) > 2:
@@ -252,6 +292,8 @@ def main():
             args.append('MAKE_COPY_RULE_ONLY')
         if rel in not_xml_files:
             args += [f'FILEGROUP={filegroup_name(rel)}', 'EXTRACT_ONLY']
+        if rel in BOOT_JARS:
+            args.append('BOOT_JAR')
         if rel in checkelf_off and rel not in unresolvable32:
             args.append('DISABLE_CHECKELF')
         if rel in unresolvable32:

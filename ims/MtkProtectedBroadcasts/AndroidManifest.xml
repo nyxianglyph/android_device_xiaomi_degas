@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+     SPDX-License-Identifier: Apache-2.0
+
+     MediaTek's framework resources (mediatek-res) declare the broadcasts of
+     the MediaTek telephony stack as protected. Those resources are not part
+     of this build, and the stock ImsService registers receivers for some of
+     the actions without an export flag, which is only allowed for protected
+     broadcasts: without this package it dies with a SecurityException in
+     WfcHandler.registerForBroadcast().
+
+     Listed are the actions the shipped IMS code uses that neither AOSP nor
+     the ImsService itself protects. Any package on a system partition may
+     declare protected broadcasts.
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="io.github.nyxianglyph.mtkbroadcasts">
+
+    <protected-broadcast android:name="android.provider.Telephony.SMS_STATE_CHANGED" />
+    <protected-broadcast android:name="com.mediatek.common.carrierexpress.operator_config_changed" />
+    <protected-broadcast android:name="com.mediatek.intent.action.AIRPLANE_CHANGE_DONE" />
+
+    <application android:hasCode="false" />
+</manifest>

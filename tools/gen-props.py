@@ -10,7 +10,8 @@ The build regenerates vendor/build.prop and odm/etc/build.prop, so the stock
 properties have to come from TARGET_{VENDOR,ODM}_PROP. Identity properties
 the build writes itself are dropped. For repeated keys the last value wins,
 as on the device; "?=" (optional) values only survive if nothing sets the
-key for real. import lines are kept as they are.
+key for real. import lines are kept as they are. OVERRIDE lists the few
+values an AOSP framework needs changed.
 
 usage: gen-props.py <stock build.prop> <partition> > props/<partition>.prop
 """
@@ -19,6 +20,8 @@ import re
 import sys
 
 # Written by the build from the device tree / product configuration.
+# ro.vndk.version must stay unset: with it linkerconfig puts the whole vendor
+# in VNDK v34 mode, which breaks the vendor modules built from source here.
 DROP = re.compile(r'|'.join([
     r'ro\.product\.(vendor|odm)\.[^.]+',
     r'ro\.(vendor|odm)\.build\..*',
@@ -28,6 +31,22 @@ DROP = re.compile(r'|'.join([
     r'ro\.vndk\.version',
     r'ro\.vendor\.api_level',
 ]))
+
+# Values that have to differ from stock on an AOSP framework.
+OVERRIDE = {
+    # HyperOS picks its SurfaceFlinger durations per refresh rate
+    # (debug.sf.144_fps.*, debug.sf.high_fps.*); AOSP only reads these base
+    # keys, which stock tunes for 60 Hz (sf 27.6 ms, app 20 ms). At 144 Hz
+    # that makes SurfaceFlinger report 5 acquired buffers, and BLASTBufferQueue
+    # then deadlocks in resizeFrameEventHistory(): no client ever draws. Use
+    # the stock 144 Hz values as the base instead.
+    'debug.sf.early.sf.duration': '11500000',
+    'debug.sf.earlyGl.sf.duration': '11500000',
+    'debug.sf.late.sf.duration': '11500000',
+    'debug.sf.early.app.duration': '8333333',
+    'debug.sf.earlyGl.app.duration': '8333333',
+    'debug.sf.late.app.duration': '8333333',
+}
 
 
 def main():
@@ -49,6 +68,10 @@ def main():
         if optional and key in values and not values[key][1]:
             continue
         values[key] = (value.strip(), optional)
+
+    for key, value in OVERRIDE.items():
+        if key in values:
+            values[key] = (value, False)
 
     print(f'# Carried over from the stock {sys.argv[2]} build.prop'
           ' by tools/gen-props.py')

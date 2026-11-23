@@ -35,7 +35,6 @@ odm/bin/crossbuild/DataSet/SQLiteModule/db/tuning_DB_aov/default_sensor/mt6897/I
 odm/bin/crossbuild/DataSet/SQLiteModule/db/tuning_DB_aov/default_sensor/mt6897/ISP_param.db;SYMLINK=odm/bin/crossbuild/DataSet/SQLiteModule/db/tuning_DB_aov/default_sensor/ISP_param.db;MAKE_COPY_RULE_ONLY
 odm/bin/crossbuild/DataSet/SQLiteModule/db/tuning_DB_aov/mt6897/ISP_info.db;SYMLINK=odm/bin/crossbuild/DataSet/SQLiteModule/db/tuning_DB_aov/ISP_info.db;MAKE_COPY_RULE_ONLY
 odm/bin/headset_detect.sh;MAKE_COPY_RULE_ONLY
-odm/bin/hw/vendor.xiaomi.hardware.dtool1-service;DISABLE_CHECKELF
 odm/bin/hw/vendor.xiaomi.hardware.seaaudio-service;DISABLE_CHECKELF
 odm/bin/hw/vendor.xiaomi.hardware.vibratorfeature.service;DISABLE_CHECKELF
 odm/bin/hw/vendor.xiaomi.hw.touchfeature-service;DISABLE_CHECKELF
@@ -720,7 +719,6 @@ odm/etc/init.panel_info.sh
 odm/etc/init/display.rc
 odm/etc/init/mrm_mitee.rc
 odm/etc/init/vendor.xiaomi.hardware.aidl.mtdservice-miteeservice.rc
-odm/etc/init/vendor.xiaomi.hardware.dtool1.rc
 odm/etc/init/vendor.xiaomi.hardware.mikeybag-miteeservice.rc
 odm/etc/init/vendor.xiaomi.hardware.mlipay-miteeservice.rc
 odm/etc/init/vendor.xiaomi.hardware.mpayjoyca-service.rc
@@ -843,7 +841,7 @@ odm/lib/libdisplaylog.so;DISABLE_CHECKELF
 odm/lib/libdither.so;DISABLE_DEPS
 odm/lib/libeyecare.so;DISABLE_DEPS
 odm/lib/libflatmode.so;DISABLE_DEPS
-odm/lib/libgf_hal.so;DISABLE_CHECKELF
+odm/lib/libgf_hal.so;DISABLE_DEPS
 odm/lib/libhistprocess.so;DISABLE_DEPS
 odm/lib/libmiBrightness.so;DISABLE_DEPS
 odm/lib/libmiSensorCtrl.so;DISABLE_DEPS
@@ -923,7 +921,7 @@ odm/lib64/camera/plugins/com.xiaomi.plugin.swjpegencode.so;DISABLE_CHECKELF
 odm/lib64/camera/plugins/com.xiaomi.plugin.videofilter.so;DISABLE_CHECKELF
 odm/lib64/camera/plugins/com.xiaomi.plugin.watermark.so;DISABLE_CHECKELF
 odm/lib64/hw/displayfeature.default.so;DISABLE_CHECKELF
-odm/lib64/hw/fingerprint.goodix_fod.so;DISABLE_CHECKELF
+odm/lib64/hw/fingerprint.goodix_fod.so:odm/lib64/hw/fingerprint.goodix_fod.default.so;DISABLE_CHECKELF;FIX_SONAME
 odm/lib64/libAncHumanVideoBokehV4.so;DISABLE_CHECKELF
 odm/lib64/libHISCppAlgos.so;MODULE_SUFFIX=_odm;DISABLE_CHECKELF
 odm/lib64/libMiDispDevManager.so;DISABLE_CHECKELF
@@ -1031,10 +1029,10 @@ odm/lib64/vendor.xiaomi.hardware.seaaudio-V1-ndk.so;DISABLE_CHECKELF
 system_ext/etc/sysconfig/com.mediatek.ims.config.xml
 
 # system_ext/framework
-system_ext/framework/mediatek-ims-base.jar
-system_ext/framework/mediatek-ims-common.jar
+system_ext/framework/mediatek-ims-base.jar;BOOT_JAR
+system_ext/framework/mediatek-ims-common.jar;BOOT_JAR
 system_ext/framework/mediatek-ims-extension-plugin.jar
-system_ext/framework/mediatek-telephony-base.jar
+system_ext/framework/mediatek-telephony-base.jar;BOOT_JAR
 
 # system_ext/lib64
 system_ext/lib64/libcomutils.so;DISABLE_CHECKELF
@@ -1042,6 +1040,7 @@ system_ext/lib64/libimsma.so;DISABLE_CHECKELF
 system_ext/lib64/libimsma_adapt.so;DISABLE_CHECKELF
 system_ext/lib64/libimsma_rtp.so;DISABLE_CHECKELF
 system_ext/lib64/libimsma_socketwrapper.so;DISABLE_CHECKELF
+system_ext/lib64/libmtk_vt_wrapper.so;DISABLE_CHECKELF
 system_ext/lib64/libsignal.so;DISABLE_CHECKELF
 system_ext/lib64/libsink.so;MODULE_SUFFIX=_system_ext;DISABLE_CHECKELF
 system_ext/lib64/libsource.so;DISABLE_CHECKELF
@@ -1053,6 +1052,7 @@ system_ext/lib64/vendor.mediatek.hardware.videotelephony@1.0.so;DISABLE_CHECKELF
 
 # system_ext/priv-app
 system_ext/priv-app/ImsService/ImsService.apk
+system_ext/priv-app/MtkGbaService/MtkGbaService.apk
 
 # vendor/apex
 vendor/apex/com.google.android.widevine.nonupdatable.apex
@@ -1068,8 +1068,6 @@ vendor/app/TetheringResOverlay/TetheringResOverlay.apk
 # vendor/bin
 vendor/bin/AgentTest;DISABLE_CHECKELF
 vendor/bin/DFtool;DISABLE_CHECKELF
-vendor/bin/MI_IC;DISABLE_CHECKELF
-vendor/bin/MI_RIC;DISABLE_CHECKELF
 vendor/bin/aee_aedv64_v2;DISABLE_CHECKELF
 vendor/bin/aee_dumpstatev_v2;DISABLE_CHECKELF
 vendor/bin/aeev_v2;DISABLE_CHECKELF
@@ -1104,7 +1102,6 @@ vendor/bin/dtc_vendor;DISABLE_CHECKELF
 vendor/bin/dumpsys;MODULE_SUFFIX=_vendor;DISABLE_CHECKELF
 vendor/bin/em_hidl;DISABLE_CHECKELF
 vendor/bin/factory;DISABLE_CHECKELF
-vendor/bin/ffu;DISABLE_CHECKELF
 vendor/bin/fpsgo;DISABLE_CHECKELF
 vendor/bin/frs;DISABLE_CHECKELF
 vendor/bin/frs_intf;DISABLE_CHECKELF
@@ -1144,7 +1141,6 @@ vendor/bin/hw/android.hardware.wifi-service-lazy;DISABLE_CHECKELF
 vendor/bin/hw/dolbycodec2;DISABLE_CHECKELF
 vendor/bin/hw/fbo-test;DISABLE_CHECKELF
 vendor/bin/hw/hostapd;MODULE_SUFFIX=_vendor;DISABLE_CHECKELF
-vendor/bin/hw/mfp-daemon;DISABLE_CHECKELF
 vendor/bin/hw/mifaced;DISABLE_CHECKELF
 vendor/bin/hw/mt6897/android.hardware.graphics.allocator-V2-service-mediatek.mt6897;SYMLINK=vendor/bin/hw/android.hardware.graphics.allocator-V2-service-mediatek;SYMLINK=vendor/bin/hw/android.hardware.graphics.allocator-V2-service-mediatek.mt6897;DISABLE_CHECKELF
 vendor/bin/hw/mt6897/arm.mali.platform-service.mediatek.mt6897;SYMLINK=vendor/bin/hw/arm.mali.platform-service.mediatek;SYMLINK=vendor/bin/hw/arm.mali.platform-service.mediatek.mt6897;DISABLE_CHECKELF
@@ -1596,11 +1592,9 @@ vendor/etc/init/audiocmdservice_atci.rc
 vendor/etc/init/bootperf.rc
 vendor/etc/init/camerahalserver.rc
 vendor/etc/init/clkmgr_init.rc
-vendor/etc/init/ddr_training.rc
 vendor/etc/init/dmc_core.rc
 vendor/etc/init/dumpstate-xiaomi.rc
 vendor/etc/init/em_hal_user.rc
-vendor/etc/init/ffu.rc
 vendor/etc/init/fpsgo.rc
 vendor/etc/init/fuelgauged_init.rc
 vendor/etc/init/fuelgauged_nvram_init.rc
@@ -1661,8 +1655,6 @@ vendor/etc/init/mbrain-mtk-default.rc
 vendor/etc/init/mcfota_service.rc
 vendor/etc/init/md_monitor.rc
 vendor/etc/init/memtrack-mediatek.rc:vendor/etc/init/memtrack-mediatek-v34.rc
-vendor/etc/init/mi_ic.rc
-vendor/etc/init/mi_ric.rc
 vendor/etc/init/miface.rc
 vendor/etc/init/miface_start_with_system_boot.rc
 vendor/etc/init/minetd.rc
@@ -2806,7 +2798,6 @@ vendor/etc/ueventd.rc
 vendor/etc/usb_audio_accessory_only_policy_configuration.xml
 vendor/etc/usb_audio_policy_configuration.xml
 vendor/etc/vendor-apns-conf.xml
-vendor/etc/vintf/manifest/AHBF-V3-service.xml
 vendor/etc/vintf/manifest/CommandService.xml
 vendor/etc/vintf/manifest/android.hardware.biometrics.face-v3.xml
 vendor/etc/vintf/manifest/android.hardware.bluetooth-service-mediatek.xml
@@ -2835,7 +2826,6 @@ vendor/etc/vintf/manifest/arm.mali.platform-mediatek.xml
 vendor/etc/vintf/manifest/bluetooth_audio.xml;EXTRACT_ONLY
 vendor/etc/vintf/manifest/dumpstate-xiaomi.xml
 vendor/etc/vintf/manifest/em_hal_service.xml
-vendor/etc/vintf/manifest/fod-aidl.xml
 vendor/etc/vintf/manifest/gnss-default.xml;EXTRACT_ONLY
 vendor/etc/vintf/manifest/gnss-mtk.xml
 vendor/etc/vintf/manifest/lights-mtk-default.xml
@@ -4844,7 +4834,6 @@ vendor/lib/vendor.xiaomi.hardware.cld@1.0.so;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk.so;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.fbo@1.0.so;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.fx.tunnel-V1-ndk.so;DISABLE_CHECKELF
-vendor/lib/vendor.xiaomi.hardware.fx.tunnel@1.0.so;MODULE_SUFFIX=_vendor;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.mikeybag-V1-ndk.so;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.miperf@1.0.so;DISABLE_CHECKELF
 vendor/lib/vendor.xiaomi.hardware.mlipay-V1-ndk.so;DISABLE_CHECKELF
@@ -4939,6 +4928,8 @@ vendor/lib64/android.media.audio.common.types-V2-ndk.so:vendor/lib64/android.med
 vendor/lib64/android.media.soundtrigger.types-V1-ndk.so:vendor/lib64/android.media.soundtrigger.types-V1-ndk-v34.so;DISABLE_CHECKELF;FIX_SONAME
 vendor/lib64/android.se.omapi-V1-ndk.so:vendor/lib64/android.se.omapi-V1-ndk-v34.so;DISABLE_CHECKELF;FIX_SONAME
 vendor/lib64/android.system.keystore2-V1-ndk.so:vendor/lib64/android.system.keystore2-V1-ndk-v34.so;DISABLE_CHECKELF;FIX_SONAME
+vendor/lib64/audioclient-types-aidl-cpp.so:vendor/lib64/audioclient-types-aidl-cpp-v34.so;DISABLE_CHECKELF;FIX_SONAME
+vendor/lib64/av-types-aidl-cpp.so:vendor/lib64/av-types-aidl-cpp-v34.so;DISABLE_CHECKELF;FIX_SONAME
 vendor/lib64/c2.dolby.client.so;DISABLE_CHECKELF
 vendor/lib64/c2.dolby.hevc.dec.so;DISABLE_CHECKELF
 vendor/lib64/c2.dolby.hevc.sec.dec.so;DISABLE_CHECKELF
@@ -4956,6 +4947,7 @@ vendor/lib64/egl/libMEOW_qt.so;DISABLE_CHECKELF
 vendor/lib64/egl/libMEOW_trace.so;DISABLE_CHECKELF
 vendor/lib64/egl/mt6897/libGLES_mali.so;SYMLINK=vendor/lib64/egl/libGLES_mali.so;DISABLE_CHECKELF
 vendor/lib64/ese_weaver.nxp.so;DISABLE_CHECKELF
+vendor/lib64/framework-permission-aidl-cpp.so:vendor/lib64/framework-permission-aidl-cpp-v34.so;DISABLE_CHECKELF;FIX_SONAME
 vendor/lib64/his_dis_mcve.bin
 vendor/lib64/hw/android.hardware.audio.effect@6.0-impl.so;DISABLE_CHECKELF
 vendor/lib64/hw/android.hardware.audio.effect@7.0-impl.so;DISABLE_CHECKELF
@@ -5861,6 +5853,7 @@ vendor/lib64/mtk_lbs_service-impl.so;DISABLE_CHECKELF
 vendor/lib64/nfc_nci.nqx.default.hw.so;DISABLE_CHECKELF
 vendor/lib64/pangu_decouple_phony.so;DISABLE_CHECKELF
 vendor/lib64/sensors.touch.detect.so;DISABLE_CHECKELF
+vendor/lib64/shared-file-region-aidl-cpp.so:vendor/lib64/shared-file-region-aidl-cpp-v34.so;DISABLE_CHECKELF;FIX_SONAME
 vendor/lib64/soundfx/libaudiohalutils.so;DISABLE_CHECKELF
 vendor/lib64/soundfx/libaudiopreprocessing.so;DISABLE_CHECKELF
 vendor/lib64/soundfx/libaudiopreprocessing_mtk.so;DISABLE_CHECKELF
@@ -5999,13 +5992,11 @@ vendor/lib64/vendor.xiaomi.hardware.bgservice@1.0-impl.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.bgservice@1.0.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.blackbox-V1-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.cld@1.0.so;DISABLE_CHECKELF
-vendor/lib64/vendor.xiaomi.hardware.displayfeature@1.0.so;MODULE_SUFFIX=_vendor;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.displayfeature_aidl-V2-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.dtool1-V1-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.fbo@1.0.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.fingerprintextension-V1-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.fx.tunnel-V1-ndk.so;DISABLE_CHECKELF
-vendor/lib64/vendor.xiaomi.hardware.fx.tunnel@1.0.so;MODULE_SUFFIX=_vendor;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.micharge-V2-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.mikeybag-V1-ndk.so;DISABLE_CHECKELF
 vendor/lib64/vendor.xiaomi.hardware.mimd@1.0.so;DISABLE_CHECKELF

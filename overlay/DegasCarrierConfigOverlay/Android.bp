@@ -1,0 +1,14 @@
+//
+// Copyright (C) 2026 nyxianglyph
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+// In /product, like hardware/mediatek's MssiCarrierConfigOverlay whose
+// vendor.xml this one replaces: overlays of a later partition win over
+// /vendor ones whatever their priority.
+runtime_resource_overlay {
+    name: "DegasCarrierConfigOverlay",
+    product_specific: true,
+    aaptflags: ["--keep-raw-values"],
+}
