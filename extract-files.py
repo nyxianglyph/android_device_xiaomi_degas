@@ -137,7 +137,31 @@ VNDK_V34_USERS = {
     'vendor/lib64/libcodec2_vpp_AIMEMC_plugin.so': ('libui.so',),
     'vendor/lib64/libcodec2_vpp_AISR_plugin.so': ('libui.so',),
     'vendor/lib64/libkeymint_remote_prov_support-v34.so': ('libbase.so',),
+    # The camera HAL: libmicamera_hal_core needs the v34 libui, and it hands
+    # android::GraphicBuffer objects to and from the other Xiaomi and MediaTek
+    # camera libraries of camerahalserver. As long as those used today's libui
+    # the heap of the service got corrupted as soon as Xiaomi's part of the
+    # pipeline ran (it does for a client that asks for Xiaomi's extensions,
+    # the stock camera app for one; the ROM's own camera does not): the
+    # service died within seconds, at a different place each time.
+    'odm/lib64/camera/plugins/com.xiaomi.plugin.beautydeformation.so': ('libui.so',),
+    'odm/lib64/camera/plugins/com.xiaomi.plugin.filter.so': ('libui.so',),
+    'odm/lib64/camera/plugins/com.xiaomi.plugin.videofilter.so': ('libui.so',),
+    'vendor/lib64/camera/libzslselectorpool.so': ('libui.so',),
+    'vendor/lib64/com.xiaomi.immunesystem.hook.mivi.so': ('libui.so',),
+    'vendor/lib64/libcom.xiaomi.ecoenginemonitor.so': ('libui.so',),
+    'vendor/lib64/libcom.xiaomi.grallocutils.so': ('libui.so',),
+    'vendor/lib64/libcom.xiaomi.ionutils.so': ('libui.so',),
+    'vendor/lib64/libcom.xiaomi.pluginutils.so': ('libui.so',),
+    'vendor/lib64/libcom.xiaomi.sensorpolicy.so': ('libui.so',),
+    'vendor/lib64/libecoengine.so': ('libui.so',),
+    'vendor/lib64/libmialgoengine.so': ('libui.so',),
     'vendor/lib64/libmicamera_hal_core.so': ('libui.so',),
+    'vendor/lib64/libmtkcam_grallocutils_aidlv1helper.so': ('libui.so',),
+    'vendor/lib64/libmtkisp_metadata_v2.so': ('libui.so',),
+    'vendor/lib64/mt6897/libmtkcam_grallocutils.so': ('libui.so',),
+    'vendor/lib64/mt6897/libmtkcam_hal_hidl_provider.so': ('libui.so',),
+    'vendor/lib64/mt6897/libmtkcam_thirdparty.customer.so': ('libui.so',),
 }
 
 
