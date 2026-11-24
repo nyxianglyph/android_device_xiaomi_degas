@@ -181,7 +181,8 @@ PRODUCT_PACKAGES += \
     DegasCarrierConfigOverlay \
     DegasFrameworksOverlay \
     DegasSecureElementOverlay \
-    DegasSettingsOverlay
+    DegasSettingsOverlay \
+    DegasSystemUIOverlay
 
 # Device nodes
 PRODUCT_COPY_FILES += \

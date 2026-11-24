@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+
+    <!-- Microns per pixel of the panel: 25400 / 445.6 dpi. SystemUI sizes the
+         lock and fingerprint icon over the sensor from it; with the default
+         of -1 the icon is squeezed to nothing and only its dark background
+         circle shows on the lock screen. -->
+    <item name="pixel_pitch" format="float" type="dimen">57.0</item>
+
+    <!-- The sensor sits low on this phone: its circle ends 163 px above the
+         bottom edge, and with the default margin the lock screen's bottom
+         text ("Charging", owner info) is drawn across it. This puts the
+         text between the circle and the gesture bar. -->
+    <dimen name="keyguard_indication_margin_bottom">8dp</dimen>
+
+</resources>
