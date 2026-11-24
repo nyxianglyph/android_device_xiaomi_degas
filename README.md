@@ -1,10 +1,37 @@
-# Device tree for the Xiaomi 14T (`degas`)
+Device configuration for Xiaomi 14T
+===================================
 
-crDroid 16.0 (Android 16) for the Xiaomi 14T, MediaTek Dimensity 8300-Ultra
-(MT6897). Written from scratch; the vendor and odm partitions are rebuilt from
-the stock HyperOS Global `OS3.0.305.0.WNEMIXM` files, the kernel is
-[android_kernel_xiaomi_degas](https://github.com/nyxianglyph/android_kernel_xiaomi_degas)
-(GKI 6.1.157 with KernelSU), shipped as a prebuilt.
+The Xiaomi 14T (codenamed _"degas"_) is a high-end smartphone from Xiaomi.
+
+It was released in September 2024.
+
+## Device specifications
+
+<table>
+<tr>
+<td rowspan="12" width="280"><img src="https://i02.appmifile.com/293_operatorx_operatorx_opx/27/09/2024/d714b3e4e95bd2d4817f5d3458b92c45.png" alt="Xiaomi 14T" title="Xiaomi 14T in Titan Blue" width="260"></td>
+<th align="right">Basic</th><th align="left">Spec Sheet</th>
+</tr>
+<tr><td align="right">SoC</td><td>MediaTek Dimensity 8300-Ultra (MT6897, 4 nm)</td></tr>
+<tr><td align="right">CPU</td><td>1x3.35 GHz Cortex-A715, 3x3.2 GHz Cortex-A715, 4x2.2 GHz Cortex-A510</td></tr>
+<tr><td align="right">GPU</td><td>Mali-G615 MC6</td></tr>
+<tr><td align="right">Memory</td><td>12/16 GB RAM (LPDDR5X)</td></tr>
+<tr><td align="right">Storage</td><td>256/512 GB (UFS 4.0)</td></tr>
+<tr><td align="right">Shipped Android Version</td><td>14, Xiaomi HyperOS</td></tr>
+<tr><td align="right">Battery</td><td>Non-removable 5000 mAh, 67 W wired charging</td></tr>
+<tr><td align="right">Display</td><td>AMOLED, 6.67 inches, 1220 x 2712 pixels (446 ppi), 144 Hz</td></tr>
+<tr><td align="right">Rear camera</td><td>50 MP wide (OIS), 50 MP telephoto (2x), 12 MP ultra wide-angle</td></tr>
+<tr><td align="right">Front camera</td><td>32 MP</td></tr>
+<tr><td align="right">Fingerprint</td><td>Under-display, optical</td></tr>
+</table>
+
+## About this tree
+
+crDroid 16.0 (Android 16). Written from scratch; the vendor and odm partitions
+are rebuilt from the stock HyperOS Global `OS3.0.305.0.WNEMIXM` files, the
+kernel is
+[android_kernel_xiaomi_degas](https://github.com/nyxianglyph/android_kernel_xiaomi_degas/tree/android-6.1.157),
+branch `android-6.1.157` (GKI 6.1.157 with KernelSU), shipped as a prebuilt.
 
 Maintainer: nyxianglyph.
 
@@ -12,23 +39,27 @@ Maintainer: nyxianglyph.
 
 Beta. Used daily on one phone.
 
-| Works | |
-|---|---|
-| Calls, mobile data (LTE/5G), VoLTE | |
-| Wi-Fi | |
-| Display at 144 Hz, brightness, auto-brightness | |
-| Under-display fingerprint | enroll and unlock |
-| Call and media audio, video playback (hardware decoders) | |
-| Encryption, screen lock | |
-| SELinux | enforcing |
-| KernelSU | use the official manager |
+Works:
 
-| Not there yet | |
-|---|---|
-| VoWiFi, video calls over LTE | not set up |
-| Background blur | off: it does not fit the 144 Hz frame time on this panel |
-| OTA updates | none yet; install is by fastboot |
-| Cameras, Bluetooth, NFC, GPS, SMS, hotspot, sensors, vibration | not verified yet |
+- Calls, mobile data (LTE/5G), VoLTE
+- Wi-Fi, hotspot, USB tethering
+- Bluetooth, NFC, GPS
+- Display at 144 Hz, brightness, auto-brightness
+- Under-display fingerprint: enroll, unlock and app prompts
+- Cameras, in the ROM's camera app (not tested in depth)
+- Call and media audio, video playback (hardware decoders)
+- Vibration, with the stock haptic effects
+- Encryption, screen lock
+- SELinux enforcing
+- KernelSU (use the official manager)
+- Google apps, in the build made with them: Play Store works, Play Integrity
+  passes
+
+Not there yet:
+
+- VoWiFi and video calls over LTE are not set up
+- Background blur is off: it does not fit the 144 Hz frame time on this panel
+- No OTA updates yet; install is by fastboot
 
 ## Building
 
@@ -97,8 +128,9 @@ WITH_GMS=true m bootimage initbootimage ...
 ```
 
 The patch takes two files out of MindTheGapps that a crDroid build already
-has (the keyboard's gesture library and `sysconfig/google.xml`). `m installclean` is needed whenever the
-build changes between the two variants.
+has (the keyboard's gesture library and `sysconfig/google.xml`).
+`m installclean` is needed whenever the build changes between the two
+variants.
 
 ## How the tree is put together
 
