@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+
+     SPDX-License-Identifier: Apache-2.0
+-->
+<!-- The four activity_* animations: a new screen slides in over the old one,
+     which moves a quarter of the way with it. The platform's own versions
+     slide both windows by 96dp and fill the gap with an edge extension, a
+     shader effect that SurfaceFlinger can only compose on the GPU; with two
+     full-screen layers that takes about 6 ms a frame on this phone, against
+     a frame time of 6.9 ms at 144 Hz. Plain translations stay on the
+     display hardware's overlay planes. -->
+<set xmlns:android="http://schemas.android.com/apk/res/android"
+    android:shareInterpolator="false">
+    <translate
+        android:fromXDelta="100%"
+        android:toXDelta="0"
+        android:fillEnabled="true"
+        android:fillBefore="true"
+        android:fillAfter="true"
+        android:interpolator="@*android:interpolator/fast_out_extra_slow_in"
+        android:duration="400" />
+</set>
