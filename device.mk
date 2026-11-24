@@ -252,3 +252,9 @@ PRODUCT_PACKAGES += \
 
 # Proprietary files
 $(call inherit-product, vendor/xiaomi/degas/degas-vendor.mk)
+
+# Google apps, for a build with WITH_GMS=true: MindTheGapps in vendor/gapps
+# (https://gitlab.com/MindTheGapps/vendor_gapps, branch baklava).
+ifeq ($(WITH_GMS),true)
+$(call inherit-product, vendor/gapps/arm64/arm64-vendor.mk)
+endif
