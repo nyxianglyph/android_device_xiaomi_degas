@@ -1,4 +1,0 @@
-# udfps/UdfpsHandler.cpp, loaded into the fingerprint service, puts the touch
-# controller in fingerprint mode on a press. (The local HBM request to the
-# display driver is already in the stock rules.)
-allow hal_fingerprint_default touchfeature_device:chr_file rw_file_perms;

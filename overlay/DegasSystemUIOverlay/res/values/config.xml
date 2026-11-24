@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <!-- With a fingerprint enrolled the lock screen stays at the one rate
+         the panel can light the sensor at (see config_udfpsRefreshRate in
+         the framework overlay), so that a press does not have to switch
+         the rate first. -->
+    <integer name="config_keyguardRefreshRate">120</integer>
+</resources>

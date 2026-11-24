@@ -1,0 +1,88 @@
+From e0971406893628061a6d26fc9f8613104e46ea46 Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Tue, 24 Nov 2026 08:25:32 +0300
+Subject: [PATCH 1/2] display: let a device choose the refresh rate for UDFPS
+
+While an under-display fingerprint sensor reads a finger the display is
+locked to its highest refresh rate. That is wrong for panels that can
+light the sensor properly at one rate only: the Xiaomi 14T has a 144 Hz
+mode, but its local high brightness mode is calibrated for 120 Hz, and at
+any other rate the whole picture brightens while the spot is on.
+
+config_udfpsRefreshRate names the rate to lock to. The default of 0, or a
+rate the display does not have, keeps the highest one.
+---
+ core/res/res/values/cr_config.xml             |  5 ++++
+ core/res/res/values/cr_symbols.xml            |  3 +++
+ .../display/mode/DisplayModeDirector.java     | 23 +++++++++++++++++--
+ 3 files changed, 29 insertions(+), 2 deletions(-)
+
+diff --git a/core/res/res/values/cr_config.xml b/core/res/res/values/cr_config.xml
+index baa4db267..a8c6843d8 100644
+--- a/core/res/res/values/cr_config.xml
++++ b/core/res/res/values/cr_config.xml
+@@ -108,4 +108,9 @@
+         <item>10</item>
+         -->
+     </integer-array>
++
++    <!-- Refresh rate, in Hz, the display is locked to while an under-display fingerprint
++         sensor reads a finger. Some panels light the sensor correctly at one rate only.
++         0 keeps the default: the highest refresh rate of the display. -->
++    <integer name="config_udfpsRefreshRate">0</integer>
+ </resources>
+diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
+index 1119ae01b..e702a2a96 100644
+--- a/core/res/res/values/cr_symbols.xml
++++ b/core/res/res/values/cr_symbols.xml
+@@ -79,4 +79,7 @@
+ 
+     <!-- Vibrator service -->
+     <java-symbol type="array" name="config_textureTickVibePattern" />
++
++    <!-- Refresh rate while an under-display fingerprint sensor is in use -->
++    <java-symbol type="integer" name="config_udfpsRefreshRate" />
+ </resources>
+diff --git a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
+index 81341609b..6673e5806 100644
+--- a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
++++ b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
+@@ -2825,14 +2825,33 @@ public class DisplayModeDirector {
+         private void updateVoteLocked(int displayId, boolean enabled, int votePriority) {
+             final Vote vote;
+             if (enabled) {
+-                float maxRefreshRate = DisplayModeDirector.this.getMaxRefreshRateLocked(displayId);
+-                vote = Vote.forPhysicalRefreshRates(maxRefreshRate, maxRefreshRate);
++                float refreshRate = getUdfpsRefreshRateLocked(displayId);
++                vote = Vote.forPhysicalRefreshRates(refreshRate, refreshRate);
+             } else {
+                 vote = null;
+             }
+             mVotesStorage.updateVote(displayId, votePriority, vote);
+         }
+ 
++        /**
++         * The rate to lock the display to: the one the device asks for with
++         * config_udfpsRefreshRate if the display has it, the highest one otherwise.
++         */
++        @GuardedBy("mLock")
++        private float getUdfpsRefreshRateLocked(int displayId) {
++            final int configured = mContext.getResources()
++                    .getInteger(R.integer.config_udfpsRefreshRate);
++            final Display.Mode[] modes = mSupportedModesByDisplay.get(displayId);
++            if (configured > 0 && modes != null) {
++                for (Display.Mode mode : modes) {
++                    if (Math.abs(mode.getRefreshRate() - configured) < 0.5f) {
++                        return mode.getRefreshRate();
++                    }
++                }
++            }
++            return DisplayModeDirector.this.getMaxRefreshRateLocked(displayId);
++        }
++
+         @GuardedBy("mLock")
+         void dumpLocked(PrintWriter pw) {
+             pw.println("  UdfpsObserver");
+-- 
+2.53.0
+

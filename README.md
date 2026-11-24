@@ -53,6 +53,15 @@ Add to `.repo/local_manifests/degas.xml`:
 repo sync
 ```
 
+Two changes to the ROM source come with the tree, in `patches/`: they let a
+device choose the refresh rate for the fingerprint sensor and hold the display
+at it for as long as the sensor area is on screen. Without them the build
+works, but the whole screen brightens when a finger is pressed on the sensor.
+
+```sh
+git -C frameworks/base am "$PWD"/device/xiaomi/degas/patches/frameworks_base/*.patch
+```
+
 The stock files are not in a repository. Unpack `super.img` of the stock
 HyperOS Global `OS3.0.305.0.WNEMIXM` fastboot package into a directory that
 holds `vendor/`, `odm/` and `system_ext/` as they are on the phone, then:
@@ -82,9 +91,10 @@ m bootimage initbootimage vendorbootimage systemimage systemextimage productimag
   policy (device/mediatek/sepolicy_vndr) does not have. `sepolicy/vendor` and
   `sepolicy/private` hold what this tree adds.
 - `udfps/` lights the fingerprint sensor area and tells the Goodix HAL about a
-  press; `ims/` holds what the stock MediaTek IMS service needs on an AOSP
-  framework; `rootdir/` the init files, including GPU frequency scaling and the
-  thermal scenario.
+  press. The panel does that cleanly at 120 Hz only, so the overlays hold the
+  display at 120 Hz wherever the sensor area is shown; `ims/` holds what the
+  stock MediaTek IMS service needs on an AOSP framework; `rootdir/` the init
+  files, including GPU frequency scaling and the thermal scenario.
 - The bootloader of this phone only boots a kernel compressed with legacy LZ4,
   an `init_boot` with a version 4 header and the MediaTek-signed stock `dtbo`
   (`prebuilt/dtbo.img`). `BoardConfig.mk` has the details.

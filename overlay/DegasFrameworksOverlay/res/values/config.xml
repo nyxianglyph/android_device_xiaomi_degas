@@ -85,4 +85,11 @@
 
     <bool name="config_enableWifiDisplay">true</bool>
 
+    <!-- The panel lights the fingerprint sensor without disturbing the rest
+         of the picture at 120 Hz only: at 60 and 144 Hz the whole screen
+         brightens by almost half while the spot is on. The framework locks
+         the display to its highest rate, 144 Hz, for a press unless told
+         otherwise (patches/frameworks_base adds this setting). -->
+    <integer name="config_udfpsRefreshRate">120</integer>
+
 </resources>

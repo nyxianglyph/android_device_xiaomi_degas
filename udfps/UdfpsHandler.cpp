@@ -8,6 +8,7 @@
 
 #include <aidl/android/hardware/biometrics/fingerprint/AcquiredInfo.h>
 #include <android-base/logging.h>
+#include <android-base/properties.h>
 #include <android-base/unique_fd.h>
 
 #include <fcntl.h>
@@ -17,6 +18,7 @@
 #include <condition_variable>
 #include <mutex>
 #include <optional>
+#include <string>
 #include <thread>
 
 #include "UdfpsHandler.h"
@@ -28,7 +30,6 @@ using std::chrono::steady_clock;
 
 namespace {
 
-constexpr char kTouchDev[] = "/dev/xiaomi-touch";
 constexpr char kDispFeatureDev[] = "/dev/mi_display/disp_feature";
 
 // extCmd() requests of the Goodix optical HAL.
@@ -36,6 +37,15 @@ constexpr int32_t kCmdFodPressStatus = 1;
 constexpr int32_t kCmdNit = 10;
 constexpr int32_t kNitOff = 0;
 constexpr int32_t kNit1000 = 1;
+constexpr int32_t kNit110 = 6;
+
+// At or below this backlight level the stock fingerprint service lights the
+// sensor with 110 nit instead of 1000 nit (it also wants the room to be dark,
+// which is when automatic brightness is this low anyway). With 1000 nit the
+// panel cannot keep the rest of the picture that dark and the whole screen
+// brightens under the finger.
+constexpr char kLowLightThresholdProp[] = "ro.hardware.fp.fod.lowlight.brightness.threshold";
+constexpr uint32_t kLowLightThresholdDefault = 411;
 
 // The panel does not report when the local HBM spot is lit on this device, so
 // the sensor is told after a fixed delay.
@@ -47,10 +57,10 @@ constexpr milliseconds kPressTimeout{1000};
 constexpr milliseconds kOffRepeat{150};
 
 /*
- * Optical UDFPS on the Xiaomi 14T. A press needs three things the AOSP
+ * Optical UDFPS on the Xiaomi 14T. A press needs two things the AOSP
  * framework does not do: the panel has to light the sensor area (local HBM),
- * the touch controller has to be put in FOD mode, and the Goodix HAL has to be
- * told about the press and about the light being ready.
+ * and the Goodix HAL has to be told about the press and about the light being
+ * ready, and how bright it is.
  *
  * Every hardware request is made by one worker thread, which also owns the
  * timers, so a press, its release and the timeouts cannot interleave.
@@ -59,10 +69,10 @@ class DegasUdfpsHandler : public UdfpsHandler {
   public:
     void init(fingerprint_device_t* device) override {
         mDevice = device;
-        mTouch.reset(open(kTouchDev, O_RDWR | O_CLOEXEC));
         mDisp.reset(open(kDispFeatureDev, O_RDWR | O_CLOEXEC));
-        if (mTouch < 0) PLOG(ERROR) << "open " << kTouchDev;
         if (mDisp < 0) PLOG(ERROR) << "open " << kDispFeatureDev;
+        mLowLightThreshold = android::base::GetUintProperty<uint32_t>(
+                kLowLightThresholdProp, kLowLightThresholdDefault);
         std::thread(&DegasUdfpsHandler::run, this).detach();
     }
 
@@ -92,14 +102,10 @@ class DegasUdfpsHandler : public UdfpsHandler {
             default:
                 break;
         }
-        // Vendor codes 21 and 22: the sensor waits for a finger.
-        if (vendorCode == 21 || vendorCode == 22) {
-            post(Request::kArmTouch);
-        }
     }
 
   private:
-    enum class Request { kDown, kUp, kArmTouch };
+    enum class Request { kDown, kUp };
     using TimePoint = steady_clock::time_point;
 
     void post(Request request) {
@@ -144,23 +150,25 @@ class DegasUdfpsHandler : public UdfpsHandler {
 
     void handle(Request request) {
         switch (request) {
-            case Request::kDown:
-                LOG(INFO) << "finger down";
+            case Request::kDown: {
+                const auto backlight = getBacklight();
+                const bool lowLight = backlight && *backlight <= mLowLightThreshold;
+                LOG(INFO) << "finger down, backlight "
+                          << (backlight ? std::to_string(*backlight) : "unknown")
+                          << (lowLight ? ": 110 nit" : ": 1000 nit");
                 mPressed = true;
+                mNit = lowLight ? kNit110 : kNit1000;
                 extCmd(kCmdFodPressStatus, 1);
-                setLocalHbm(MI_DISP_LHBM_WHITE_1000NIT);
-                setTouchFod(true);
+                setLocalHbm(lowLight ? MI_DISP_LHBM_WHITE_110NIT : MI_DISP_LHBM_WHITE_1000NIT);
                 mReadyAt = steady_clock::now() + kLhbmSettle;
                 mTimeoutAt = steady_clock::now() + kPressTimeout;
                 mRepeatOffAt.reset();
                 break;
+            }
             case Request::kUp:
                 if (mPressed) LOG(INFO) << "finger up";
                 release();
                 mRepeatOffAt = steady_clock::now() + kOffRepeat;
-                break;
-            case Request::kArmTouch:
-                setTouchFod(true);
                 break;
         }
     }
@@ -169,7 +177,7 @@ class DegasUdfpsHandler : public UdfpsHandler {
         auto now = steady_clock::now();
         if (mReadyAt && now >= *mReadyAt) {
             mReadyAt.reset();
-            extCmd(kCmdNit, kNit1000);
+            extCmd(kCmdNit, mNit);
         }
         if (mTimeoutAt && now >= *mTimeoutAt) {
             LOG(INFO) << "no finger up, turning the light off";
@@ -189,7 +197,6 @@ class DegasUdfpsHandler : public UdfpsHandler {
         extCmd(kCmdFodPressStatus, 0);
         setLocalHbm(MI_DISP_LHBM_OFF_FINGER_UP);
         extCmd(kCmdNit, kNitOff);
-        setTouchFod(false);
     }
 
     void extCmd(int32_t cmd, int32_t param) {
@@ -206,16 +213,21 @@ class DegasUdfpsHandler : public UdfpsHandler {
         }
     }
 
-    void setTouchFod(bool pressed) {
-        int buf[XIAOMI_TOUCH_BUF_SIZE] = {0, XIAOMI_TOUCH_MODE_FOD_ENABLE, pressed ? 1 : 0};
-        if (ioctl(mTouch.get(), XIAOMI_TOUCH_IOC_SET_CUR_VALUE, &buf) < 0) {
-            PLOG(ERROR) << "touch FOD mode " << pressed;
+    std::optional<uint32_t> getBacklight() {
+        struct mi_disp_brightness_req req = {
+                .base = {.flag = 0, .disp_id = 0},
+                .brightness = 0,
+        };
+        if (ioctl(mDisp.get(), MI_DISP_IOCTL_GET_BRIGHTNESS, &req) < 0) {
+            PLOG(ERROR) << "get backlight";
+            return std::nullopt;
         }
+        return req.brightness;
     }
 
     fingerprint_device_t* mDevice = nullptr;
-    android::base::unique_fd mTouch;
     android::base::unique_fd mDisp;
+    uint32_t mLowLightThreshold = kLowLightThresholdDefault;
 
     std::mutex mLock;
     std::condition_variable mWake;
@@ -224,6 +236,7 @@ class DegasUdfpsHandler : public UdfpsHandler {
 
     // Only touched by the worker thread.
     bool mPressed = false;
+    int32_t mNit = kNit1000;
     std::optional<TimePoint> mReadyAt;
     std::optional<TimePoint> mTimeoutAt;
     std::optional<TimePoint> mRepeatOffAt;
