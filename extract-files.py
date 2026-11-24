@@ -163,6 +163,18 @@ AIDL_BUMP = {
 }
 
 
+# Stock blobs that get one more change on top of the renames above.
+EXTRA_FIXUPS = {
+    # The stock vibrator service registers as IVibrator/vibratorfeature, the
+    # instance the HyperOS framework asks for. Android looks for the default
+    # instance only and found no vibrator at all. The new name is shorter;
+    # the rest of the string is filled with NULs.
+    'odm/bin/hw/vendor.xiaomi.hardware.vibratorfeature.service':
+        lambda fixup: fixup.binary_regex_replace(
+            b'/vibratorfeature\x00', b'/default' + b'\x00' * 9),
+}
+
+
 def v34_blob_fixups():
     dump = next((a for a in sys.argv[1:] if os.path.isdir(a)), None)
     if dump is None:
@@ -174,16 +186,19 @@ def v34_blob_fixups():
     for rel, hits in VNDK_V34_USERS.items():
         renames.setdefault(rel, set()).update(hits)
     groups = {}
-    for rel in sorted(set(renames) | set(SHIM_USERS)):
-        key = (tuple(sorted(renames.get(rel, ()))), SHIM_USERS.get(rel))
+    for rel in sorted(set(renames) | set(SHIM_USERS) | set(EXTRA_FIXUPS)):
+        key = (tuple(sorted(renames.get(rel, ()))), SHIM_USERS.get(rel),
+               rel if rel in EXTRA_FIXUPS else None)
         groups.setdefault(key, []).append(rel)
     fixups = {}
-    for (hits, shim), rels in groups.items():
+    for (hits, shim, extra), rels in groups.items():
         fixup = blob_fixup()
         for name in hits:
             fixup = fixup.replace_needed(name, AIDL_BUMP.get(name, name[:-3] + '-v34.so'))
         if shim:
             fixup = fixup.add_needed(shim)
+        if extra:
+            fixup = EXTRA_FIXUPS[extra](fixup)
         fixups[tuple(rels)] = fixup
     return fixups
 
@@ -205,7 +220,10 @@ def text_fixups(dump):
     basename is patched (the import of init.mt6897.usb.rc, the jar path in
     camera_extensions.xml, the service paths of the renamed HALs).
     """
-    subs = []  # (regex, replacement)
+    subs = [  # (regex, replacement)
+        # The instance the vibrator service registers, see EXTRA_FIXUPS.
+        (r'IVibrator/vibratorfeature', 'IVibrator/default'),
+    ]
     for old, new in renamed_files():
         ob, nb = os.path.basename(old), os.path.basename(new)
         subs.append((r'(?<=[/}])%s(?![\w.@-])' % re.escape(ob), nb))
