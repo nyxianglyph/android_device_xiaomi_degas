@@ -46,6 +46,12 @@ OVERRIDE = {
     'debug.sf.early.app.duration': '8333333',
     'debug.sf.earlyGl.app.duration': '8333333',
     'debug.sf.late.app.duration': '8333333',
+    # RenderEngine always runs on its own thread since Android 15, but with
+    # the stock value "skiagl" it is still told that it does not, and then
+    # skips its texture cache: every layer is imported as a new texture on
+    # every composed frame (about 0.5 ms each), which does not fit the
+    # 144 Hz frame time and makes window animations stutter.
+    'debug.renderengine.backend': 'skiaglthreaded',
 }
 
 
