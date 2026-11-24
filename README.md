@@ -53,13 +53,17 @@ Add to `.repo/local_manifests/degas.xml`:
 repo sync
 ```
 
-Two changes to the ROM source come with the tree, in `patches/`: they let a
+Three changes to the ROM source come with the tree, in `patches/`. Two let a
 device choose the refresh rate for the fingerprint sensor and hold the display
-at it for as long as the sensor area is on screen. Without them the build
-works, but the whole screen brightens when a finger is pressed on the sensor.
+at it for as long as the sensor area is on screen; the third names a network
+from the carrier list when the modem reports only its number. Without them the
+build works, but the whole screen brightens when a finger is pressed on the
+sensor, and some networks show as a number such as 28602.
 
 ```sh
-git -C frameworks/base am "$PWD"/device/xiaomi/degas/patches/frameworks_base/*.patch
+for dir in frameworks_base frameworks_opt_telephony; do
+    git -C "$(echo $dir | tr _ /)" am "$PWD"/device/xiaomi/degas/patches/$dir/*.patch
+done
 ```
 
 The stock files are not in a repository. Unpack `super.img` of the stock

@@ -1,0 +1,86 @@
+From 5d9962d0e51fb50be506b97e186af9cc33ace1d6 Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Tue, 24 Nov 2026 10:08:11 +0300
+Subject: [PATCH] telephony: name a network from the carrier list when the
+ modem gives only its number
+
+Some modems leave the naming of a network to a vendor framework when
+the network itself announces no complete name, and report the numeric
+code as both the long and the short name. ServiceState then carries
+that number, and it is shown wherever the network is named, the mobile
+data tile in quick settings for one.
+
+When the name the modem reports is empty or equal to the numeric code,
+look the code up in the carrier list and use that name instead. A name
+the modem does know is left alone.
+---
+ .../telephony/ServiceStateTracker.java        | 39 ++++++++++++++++++-
+ 1 file changed, 38 insertions(+), 1 deletion(-)
+
+diff --git a/src/java/com/android/internal/telephony/ServiceStateTracker.java b/src/java/com/android/internal/telephony/ServiceStateTracker.java
+index f28e250..e488436 100644
+--- a/src/java/com/android/internal/telephony/ServiceStateTracker.java
++++ b/src/java/com/android/internal/telephony/ServiceStateTracker.java
+@@ -319,6 +319,10 @@ public class ServiceStateTracker extends Handler {
+ 
+     private CarrierDisplayNameResolver mCdnr;
+ 
++    // The last network looked up in the carrier list for its name, and what was found.
++    private String mCarrierListOperatorNumeric;
++    private String mCarrierListOperatorName;
++
+     private boolean mImsRegistrationOnOff = false;
+     @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
+     private boolean mDeviceShuttingDown = false;
+@@ -1807,6 +1811,28 @@ public class ServiceStateTracker extends Handler {
+         }
+     }
+ 
++    /** Whether the modem named a network by nothing but its number. */
++    private static boolean isOperatorNameMissing(String name, String numeric) {
++        return TextUtils.isEmpty(name) || name.equals(numeric);
++    }
++
++    /**
++     * A modem that knows no name for the registered network reports its number as the name,
++     * and that is what the user then sees. Name such a network from the carrier list instead.
++     */
++    private String getOperatorNameFromCarrierList(String numeric) {
++        if (TextUtils.isEmpty(numeric)) {
++            return null;
++        }
++        if (!numeric.equals(mCarrierListOperatorNumeric)) {
++            mCarrierListOperatorName =
++                    CarrierResolver.getCarrierNameFromMccMnc(mPhone.getContext(), numeric);
++            // Not found is not final: the carrier list may not be loaded this early.
++            mCarrierListOperatorNumeric = mCarrierListOperatorName != null ? numeric : null;
++        }
++        return mCarrierListOperatorName;
++    }
++
+     protected void handlePollStateResultMessage(int what, AsyncResult ar) {
+         int[] ints;
+         switch (what) {
+@@ -1891,7 +1917,18 @@ public class ServiceStateTracker extends Handler {
+                         log("EVENT_POLL_STATE_OPERATOR: use brandOverride=" + brandOverride);
+                         mNewSS.setOperatorName(brandOverride, brandOverride, opNames[2]);
+                     } else {
+-                        mNewSS.setOperatorName(opNames[0], opNames[1], opNames[2]);
++                        String longName = opNames[0];
++                        String shortName = opNames[1];
++                        if (isOperatorNameMissing(longName, opNames[2])) {
++                            final String listed = getOperatorNameFromCarrierList(opNames[2]);
++                            if (listed != null) {
++                                longName = listed;
++                                if (isOperatorNameMissing(shortName, opNames[2])) {
++                                    shortName = listed;
++                                }
++                            }
++                        }
++                        mNewSS.setOperatorName(longName, shortName, opNames[2]);
+                     }
+                 }
+                 break;
+-- 
+2.53.0
+
