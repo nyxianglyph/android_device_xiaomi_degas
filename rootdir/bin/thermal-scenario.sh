@@ -16,14 +16,20 @@
 # keeps mi_thermald's own last-resort limits; once the board reaches WARM the
 # default profile takes over until it has cooled down to COOL again.
 #
+# The default profile is felt at once: SurfaceFlinger needs about twice as
+# long to compose a frame with the GPU held back (6 ms against 3.3 ms, with a
+# 6.9 ms frame at 144 Hz), and window transitions then lose a quarter of
+# their frames instead of a tenth. A phone that is charging and in use
+# crosses 43 C easily, so the limits start at 46 C.
+#
 # mi_thermald only reacts to a change of sconfig, so this is started after
 # boot has completed, when the daemon is watching the file.
 
 TM=/sys/class/thermal/thermal_message
 SCONFIG_DEFAULT=-1
 SCONFIG_NOLIMITS=6
-WARM=43000
-COOL=40000
+WARM=46000
+COOL=43000
 
 mode=
 while :; do
