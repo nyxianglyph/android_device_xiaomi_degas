@@ -84,15 +84,20 @@ Add to `.repo/local_manifests/degas.xml`:
 repo sync
 ```
 
-Three changes to the ROM source come with the tree, in `patches/`. Two let a
-device choose the refresh rate for the fingerprint sensor and hold the display
-at it for as long as the sensor area is on screen; the third names a network
-from the carrier list when the modem reports only its number. Without them the
-build works, but the whole screen brightens when a finger is pressed on the
-sensor, and some networks show as a number such as 28602.
+Five changes to the ROM source come with the tree, in `patches/`:
+
+- two let a device choose the refresh rate for the fingerprint sensor and hold
+  the display at it for as long as the sensor area is on screen; without them
+  the whole screen brightens when a finger is pressed on the sensor;
+- one gives SystemUI the doze options this panel needs; without it the
+  always-on display turns black a few seconds after the screen is locked;
+- one names a network from the carrier list when the modem reports only its
+  number; without it some networks show as a number such as 28602;
+- one lets Aperture take the main cameras from an overlay and record 60 fps
+  video; without it the camera app offers one lens and 30 fps.
 
 ```sh
-for dir in frameworks_base frameworks_opt_telephony; do
+for dir in frameworks_base frameworks_opt_telephony packages_apps_Aperture; do
     git -C "$(echo $dir | tr _ /)" am "$PWD"/device/xiaomi/degas/patches/$dir/*.patch
 done
 ```
