@@ -1,0 +1,7 @@
+# Charging control: stops and resumes charging through the battery's
+# input_suspend node, reached by its /sys/class/power_supply link.
+allow hal_lineage_health_default sysfs:dir search;
+allow hal_lineage_health_default sysfs:lnk_file read;
+allow hal_lineage_health_default sysfs_battery_supply:dir search;
+allow hal_lineage_health_default sysfs_battery_supply:lnk_file read;
+allow hal_lineage_health_default sysfs_battery_supply:file rw_file_perms;
