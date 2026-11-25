@@ -181,6 +181,12 @@ PRODUCT_VENDOR_PROPERTIES += \
     persist.vendor.fingerprint.sensor_location=610|2444|105 \
     persist.vendor.fingerprint.udfps.control_illumination=true
 
+# Widevine: the HAL runs from the stock vendor APEX and loads liboemcrypto.so
+# from /vendor/lib64, which the APEX only reaches when the vendor partition
+# names the library as one it provides. Without this it stays on L3.
+PRODUCT_VENDOR_LINKER_CONFIG_FRAGMENTS += \
+    $(LOCAL_PATH)/configs/linker.config.json
+
 # Overlays
 PRODUCT_PACKAGES += \
     DegasCarrierConfigOverlay \
