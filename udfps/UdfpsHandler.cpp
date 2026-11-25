@@ -53,6 +53,12 @@ constexpr milliseconds kLhbmSettle{80};
 // A press that never sees a finger-up (the overlay can go away first) must not
 // leave the spot lit.
 constexpr milliseconds kPressTimeout{1000};
+// Below this backlight level the panel refuses to light the spot. It is there
+// while the panel is still coming up, which is where a press on the dark
+// screen finds it, so the light waits for the backlight, this long at most.
+constexpr uint32_t kMinLhbmBacklight = 15;
+constexpr milliseconds kBacklightPoll{20};
+constexpr milliseconds kBacklightWait{800};
 // The off request is repeated once, in case a late HAL request relit the spot.
 constexpr milliseconds kOffRepeat{150};
 
@@ -142,7 +148,7 @@ class DegasUdfpsHandler : public UdfpsHandler {
 
     std::optional<TimePoint> earliestDeadline() const {
         std::optional<TimePoint> earliest;
-        for (const auto& t : {mReadyAt, mTimeoutAt, mRepeatOffAt}) {
+        for (const auto& t : {mLightAt, mReadyAt, mTimeoutAt, mRepeatOffAt}) {
             if (t && (!earliest || *t < *earliest)) earliest = t;
         }
         return earliest;
@@ -150,21 +156,14 @@ class DegasUdfpsHandler : public UdfpsHandler {
 
     void handle(Request request) {
         switch (request) {
-            case Request::kDown: {
-                const auto backlight = getBacklight();
-                const bool lowLight = backlight && *backlight <= mLowLightThreshold;
-                LOG(INFO) << "finger down, backlight "
-                          << (backlight ? std::to_string(*backlight) : "unknown")
-                          << (lowLight ? ": 110 nit" : ": 1000 nit");
+            case Request::kDown:
                 mPressed = true;
-                mNit = lowLight ? kNit110 : kNit1000;
                 extCmd(kCmdFodPressStatus, 1);
-                setLocalHbm(lowLight ? MI_DISP_LHBM_WHITE_110NIT : MI_DISP_LHBM_WHITE_1000NIT);
-                mReadyAt = steady_clock::now() + kLhbmSettle;
+                mLightDeadline = steady_clock::now() + kBacklightWait;
                 mTimeoutAt = steady_clock::now() + kPressTimeout;
                 mRepeatOffAt.reset();
+                lightSensor();
                 break;
-            }
             case Request::kUp:
                 if (mPressed) LOG(INFO) << "finger up";
                 release();
@@ -173,8 +172,28 @@ class DegasUdfpsHandler : public UdfpsHandler {
         }
     }
 
+    // Lights the spot, or comes back shortly if the panel is not ready for it.
+    void lightSensor() {
+        const auto now = steady_clock::now();
+        const auto backlight = getBacklight();
+        if (backlight && *backlight < kMinLhbmBacklight && now < mLightDeadline) {
+            mLightAt = now + kBacklightPoll;
+            return;
+        }
+        mLightAt.reset();
+        const bool lowLight = backlight && *backlight <= mLowLightThreshold;
+        LOG(INFO) << "finger down, backlight "
+                  << (backlight ? std::to_string(*backlight) : "unknown")
+                  << (lowLight ? ": 110 nit" : ": 1000 nit");
+        mNit = lowLight ? kNit110 : kNit1000;
+        setLocalHbm(lowLight ? MI_DISP_LHBM_WHITE_110NIT : MI_DISP_LHBM_WHITE_1000NIT);
+        mReadyAt = now + kLhbmSettle;
+        mTimeoutAt = now + kPressTimeout;
+    }
+
     void handleTimers() {
         auto now = steady_clock::now();
+        if (mLightAt && now >= *mLightAt) lightSensor();
         if (mReadyAt && now >= *mReadyAt) {
             mReadyAt.reset();
             extCmd(kCmdNit, mNit);
@@ -192,6 +211,7 @@ class DegasUdfpsHandler : public UdfpsHandler {
 
     void release() {
         mPressed = false;
+        mLightAt.reset();
         mReadyAt.reset();
         mTimeoutAt.reset();
         extCmd(kCmdFodPressStatus, 0);
@@ -237,6 +257,8 @@ class DegasUdfpsHandler : public UdfpsHandler {
     // Only touched by the worker thread.
     bool mPressed = false;
     int32_t mNit = kNit1000;
+    std::optional<TimePoint> mLightAt;
+    TimePoint mLightDeadline;
     std::optional<TimePoint> mReadyAt;
     std::optional<TimePoint> mTimeoutAt;
     std::optional<TimePoint> mRepeatOffAt;
