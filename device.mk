@@ -178,9 +178,14 @@ PRODUCT_PACKAGES += \
     libRS_internal.vendor \
     libRSDriver.vendor
 
-# Touch gestures on a dark screen and the brightness of the always-on display
+# Touch gestures on a dark screen, the brightness of the always-on display
+# and the color scheme
 PRODUCT_PACKAGES += \
     DegasParts
+
+# Vivid, the color mode the display uses until another one is chosen
+PRODUCT_VENDOR_PROPERTIES += \
+    persist.sys.sf.native_mode=258
 
 # The touch controller's doze gestures as sensors: a sub-HAL of the stock
 # sensor HAL, which loads what hals.conf lists.

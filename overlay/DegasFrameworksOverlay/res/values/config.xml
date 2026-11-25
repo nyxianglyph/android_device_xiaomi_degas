@@ -25,6 +25,16 @@
     <integer name="config_screenBrightnessDoze">5</integer>
     <item name="config_screenBrightnessDozeFloat" format="float" type="dimen">0.019607844</item>
 
+    <!-- Color modes: the three color schemes of the stock system, which are
+         render intents of the stock composer (vivid, saturated, original
+         color). parts/ tells the display feature service which one is in
+         use; the default is the persist.sys.sf.native_mode property. -->
+    <integer-array name="config_availableColorModes">
+        <item>258</item>
+        <item>256</item>
+        <item>257</item>
+    </integer-array>
+
     <!-- Ambient display. The panel has a low power mode of its own and the
          display HAL reports it, so the always-on display can be offered; it
          stays off until it is turned on in the settings. -->
