@@ -206,6 +206,7 @@ PRODUCT_PACKAGES += \
 
 # Overlays
 PRODUCT_PACKAGES += \
+    DegasApertureOverlay \
     DegasCarrierConfigOverlay \
     DegasFrameworksOverlay \
     DegasSecureElementOverlay \

@@ -1,0 +1,183 @@
+From 056d165b06bb53040f13acdf75cf3aea63cb9313 Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Wed, 25 Nov 2026 18:57:06 +0300
+Subject: [PATCH] Main camera ids from an overlay and 60 fps on MediaTek
+
+Change-Id: I0a2b882217f3280e8255122e7cac040eac534985
+---
+ .../org/lineageos/aperture/CameraActivity.kt  |  8 ++++++
+ .../ext/CaptureRequestOptionsBuilder.kt       | 17 +++++++++++
+ .../org/lineageos/aperture/models/Camera.kt   | 11 ++++++++
+ .../aperture/repositories/CameraRepository.kt | 28 ++++++-------------
+ .../repositories/OverlaysRepository.kt        |  5 ++++
+ app/src/main/res/values/config.xml            | 10 +++++++
+ 6 files changed, 60 insertions(+), 19 deletions(-)
+
+diff --git a/app/src/main/java/org/lineageos/aperture/CameraActivity.kt b/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
+index 9d51ad1..8bd602c 100644
+--- a/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
++++ b/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
+@@ -90,6 +90,7 @@ import org.lineageos.aperture.ext.setColorCorrectionAberrationMode
+ import org.lineageos.aperture.ext.setDistortionCorrectionMode
+ import org.lineageos.aperture.ext.setEdgeMode
+ import org.lineageos.aperture.ext.setFrameRate
++import org.lineageos.aperture.ext.setMediaTekHfpsMode
+ import org.lineageos.aperture.ext.setHotPixelMode
+ import org.lineageos.aperture.ext.setNoiseReductionMode
+ import org.lineageos.aperture.ext.setPadding
+@@ -1635,6 +1636,13 @@ open class CameraActivity : AppCompatActivity(R.layout.activity_camera) {
+                         else -> null
+                     }
+                 )
++                .setMediaTekHfpsMode(
++                    cameraConfiguration.camera.supportsMediaTekHfpsMode,
++                    when (cameraConfiguration) {
++                        is CameraConfiguration.Video -> cameraConfiguration.videoFrameRate
++                        else -> null
++                    }
++                )
+                 .setVideoStabilizationMode(
+                     when (cameraConfiguration) {
+                         is CameraConfiguration.Video -> when (
+diff --git a/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt b/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
+index 4cff361..e9daed0 100644
+--- a/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
++++ b/app/src/main/java/org/lineageos/aperture/ext/CaptureRequestOptionsBuilder.kt
+@@ -35,6 +35,23 @@ fun CaptureRequestOptions.Builder.setFrameRate(
+     frameRate?.range?.toRange(),
+ )
+ 
++/**
++ * MediaTek cameras stay at 30 fps whatever the target frame rate range says,
++ * unless their high frame rate mode is asked for as well.
++ */
++private val MEDIATEK_HFPS_MODE = CaptureRequest.Key(
++    "com.mediatek.streamingfeature.hfpsMode", IntArray::class.java
++)
++
++@androidx.camera.camera2.interop.ExperimentalCamera2Interop
++fun CaptureRequestOptions.Builder.setMediaTekHfpsMode(
++    supported: Boolean,
++    frameRate: FrameRate?,
++) = setOrClearCaptureRequestOption(
++    MEDIATEK_HFPS_MODE,
++    intArrayOf(1).takeIf { supported && frameRate != null && frameRate.value > 30 },
++)
++
+ @androidx.camera.camera2.interop.ExperimentalCamera2Interop
+ fun CaptureRequestOptions.Builder.setVideoStabilizationMode(
+     videoStabilizationMode: VideoStabilizationMode?
+diff --git a/app/src/main/java/org/lineageos/aperture/models/Camera.kt b/app/src/main/java/org/lineageos/aperture/models/Camera.kt
+index 0847e6f..4592557 100644
+--- a/app/src/main/java/org/lineageos/aperture/models/Camera.kt
++++ b/app/src/main/java/org/lineageos/aperture/models/Camera.kt
+@@ -56,6 +56,17 @@ class Camera private constructor(
+      */
+     val cameraId: String = camera2CameraInfo.cameraId
+ 
++    /**
++     * Whether this is a MediaTek camera with a high frame rate mode.
++     */
++    val supportsMediaTekHfpsMode = runCatching {
++        camera2CameraInfo.getCameraCharacteristic(
++            CameraCharacteristics.Key(
++                "com.mediatek.streamingfeature.availableHfpsModes", IntArray::class.java
++            )
++        )?.contains(1)
++    }.getOrNull() == true
++
+     /**
+      * The [CameraFacing] of this camera.
+      */
+diff --git a/app/src/main/java/org/lineageos/aperture/repositories/CameraRepository.kt b/app/src/main/java/org/lineageos/aperture/repositories/CameraRepository.kt
+index e47ac48..e8a6e05 100644
+--- a/app/src/main/java/org/lineageos/aperture/repositories/CameraRepository.kt
++++ b/app/src/main/java/org/lineageos/aperture/repositories/CameraRepository.kt
+@@ -62,16 +62,14 @@ class CameraRepository(
+             .mapToCamera()
+     }
+ 
+-    val mainBackCamera by lazy {
+-        internalCameras.firstOrNull { camera ->
+-            camera.cameraFacing == CameraFacing.BACK
+-        }
+-    }
++    val mainBackCamera by lazy { mainCamera(CameraFacing.BACK) }
+ 
+-    val mainFrontCamera by lazy {
+-        internalCameras.firstOrNull { camera ->
+-            camera.cameraFacing == CameraFacing.FRONT
+-        }
++    val mainFrontCamera by lazy { mainCamera(CameraFacing.FRONT) }
++
++    private fun mainCamera(cameraFacing: CameraFacing) = internalCameras.firstOrNull { camera ->
++        camera.cameraFacing == cameraFacing && camera.cameraId in overlaysRepository.mainCameraIds
++    } ?: internalCameras.firstOrNull { camera ->
++        camera.cameraFacing == cameraFacing
+     }
+ 
+     /**
+@@ -116,7 +114,7 @@ class CameraRepository(
+         val camera2CameraInfo = Camera2CameraInfo.from(this)
+ 
+         return when (camera2CameraInfo.cameraId) {
+-            in mainCameraIds -> true
++            in overlaysRepository.mainCameraIds -> true
+ 
+             else -> {
+                 val isIgnoredAuxCamera = overlaysRepository.ignoredAuxCameraIds.contains(
+@@ -144,13 +142,5 @@ class CameraRepository(
+         context.permissionGranted(Manifest.permission.CAMERA)
+     ) { "Camera permission not granted" }
+ 
+-    companion object {
+-        /**
+-         * List of main camera IDs. These should never be excluded.
+-         */
+-        private val mainCameraIds = setOf(
+-            "0",
+-            "1",
+-        )
+-    }
++    companion object {    }
+ }
+diff --git a/app/src/main/java/org/lineageos/aperture/repositories/OverlaysRepository.kt b/app/src/main/java/org/lineageos/aperture/repositories/OverlaysRepository.kt
+index 78d39a2..b178991 100644
+--- a/app/src/main/java/org/lineageos/aperture/repositories/OverlaysRepository.kt
++++ b/app/src/main/java/org/lineageos/aperture/repositories/OverlaysRepository.kt
+@@ -38,6 +38,11 @@ class OverlaysRepository(private val context: Context) {
+         runCatching { RROResources(it) }.getOrNull()
+     }
+ 
++    /**
++     * @see R.array.config_mainCameraIds
++     */
++    val mainCameraIds = getStringArray(R.array.config_mainCameraIds).toSet()
++
+     /**
+      * @see R.bool.config_enableAuxCameras
+      */
+diff --git a/app/src/main/res/values/config.xml b/app/src/main/res/values/config.xml
+index 72cd4c7..022f2fa 100644
+--- a/app/src/main/res/values/config.xml
++++ b/app/src/main/res/values/config.xml
+@@ -4,6 +4,16 @@
+      SPDX-License-Identifier: Apache-2.0
+ -->
+ <resources>
++    <!-- IDs of the main camera of each side: the camera the app opens for that
++         side, and one that is never left out. Every other camera is an
++         auxiliary one. Change this when the first camera of a side is not the
++         one to use, for example a logical camera that cannot do what its main
++         sensor alone can. -->
++    <string-array name="config_mainCameraIds">
++        <item>0</item>
++        <item>1</item>
++    </string-array>
++
+     <!-- Enable auxiliary cameras selector. -->
+     <bool name="config_enableAuxCameras">false</bool>
+ 
+-- 
+2.53.0
+
