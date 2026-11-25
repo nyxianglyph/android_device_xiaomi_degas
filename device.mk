@@ -170,6 +170,14 @@ PRODUCT_PACKAGES += \
     android.hardware.biometrics.fingerprint-service.xiaomi \
     libudfpshandler
 
+# RenderScript: the stock HAL module opens libRS_internal.so, which it found in
+# the VNDK APEX on stock. Here it has to be in /vendor/lib64, with the CPU
+# driver it loads in turn; without them every app that blurs an image with
+# RenderScript dies.
+PRODUCT_PACKAGES += \
+    libRS_internal.vendor \
+    libRSDriver.vendor
+
 # Xiaomi HIDL interface libraries the stock blobs link, built from
 # hardware/xiaomi instead of taken from stock (class "interface").
 PRODUCT_PACKAGES += \
