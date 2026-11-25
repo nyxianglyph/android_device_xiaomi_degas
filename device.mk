@@ -39,6 +39,11 @@ AB_OTA_POSTINSTALL_CONFIG += \
     FILESYSTEM_TYPE_system=erofs \
     POSTINSTALL_OPTIONAL_system=true
 
+# Recovery needs a boot control service of its own to install an update
+# package and switch slots; the running system uses the stock one.
+PRODUCT_PACKAGES += \
+    android.hardware.boot-service.mediatek_recovery
+
 # Fastbootd
 PRODUCT_PACKAGES += \
     fastbootd
