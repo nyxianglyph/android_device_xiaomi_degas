@@ -9,4 +9,21 @@
          the framework overlay), so that a press does not have to switch
          the rate first. -->
     <integer name="config_keyguardRefreshRate">120</integer>
+
+    <!-- The display has low power modes for the always-on display. Without
+         them SystemUI keeps the panel fully on while it dozes, and the phone
+         cannot suspend for as long as the always-on display is shown. The
+         touch controller watches for a double tap in STATE_DOZE_SUSPEND only,
+         and the panel takes its brightness and a new frame in STATE_DOZE
+         only, so the display stops there for a second on its way and at every
+         minute (parts/ sets the brightness then). -->
+    <bool name="doze_display_state_supported">true</bool>
+    <bool name="doze_suspend_display_state_supported">true</bool>
+    <integer name="doze_suspend_entry_delay">1000</integer>
+
+    <!-- On the dozing panel the touch controller reports most double taps as
+         a single tap, so a tap wakes the phone from the always-on display.
+         On the dark panel it reports the double tap, and the tap gesture
+         stays out of the way. -->
+    <bool name="doze_tap_gesture_requires_aod">true</bool>
 </resources>

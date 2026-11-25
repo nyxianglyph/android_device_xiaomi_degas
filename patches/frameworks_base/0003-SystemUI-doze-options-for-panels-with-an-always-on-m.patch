@@ -1,0 +1,206 @@
+From 53ce4221a611492d615b534ccd639aeab4f5da0d Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Wed, 25 Nov 2026 18:57:06 +0300
+Subject: [PATCH] SystemUI: doze options for panels with an always-on mode of
+ their own
+
+---
+ packages/SystemUI/res/values/config.xml       | 13 +++++++
+ .../android/systemui/doze/DozeMachine.java    |  9 +++++
+ .../systemui/doze/DozeScreenState.java        | 38 +++++++++++++++++++
+ .../android/systemui/doze/DozeSensors.java    |  2 +-
+ .../src/com/android/systemui/doze/DozeUi.java |  5 ++-
+ .../statusbar/phone/DozeParameters.java       | 13 +++++++
+ 6 files changed, 78 insertions(+), 2 deletions(-)
+
+diff --git a/packages/SystemUI/res/values/config.xml b/packages/SystemUI/res/values/config.xml
+index 3f1bc384f..bd5c54eb7 100644
+--- a/packages/SystemUI/res/values/config.xml
++++ b/packages/SystemUI/res/values/config.xml
+@@ -202,6 +202,19 @@
+     <!-- Doze: does this device support STATE_DOZE_SUSPEND?  -->
+     <bool name="doze_suspend_display_state_supported">false</bool>
+ 
++    <!-- Doze: how long, in milliseconds, the display stays in STATE_DOZE on its way to
++         STATE_DOZE_SUSPEND, both when it goes there and at every time tick. For panels that
++         take commands and frames in STATE_DOZE only: without the stop they come up dark in
++         STATE_DOZE_SUSPEND and never show a new minute. 0 goes to STATE_DOZE_SUSPEND
++         directly. -->
++    <integer name="doze_suspend_entry_delay">0</integer>
++
++    <!-- Doze: use the tap gesture only while the always-on display shows. For touch
++         controllers that tell a double tap from a single tap on a dark panel but not on a
++         dozing one: there a tap has to wake the device, on the dark panel the double tap
++         still can. -->
++    <bool name="doze_tap_gesture_requires_aod">false</bool>
++
+     <!-- Doze: should the significant motion sensor be used as a pulse signal? -->
+     <bool name="doze_pulse_on_significant_motion">false</bool>
+ 
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java b/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
+index 7cd141813..3c31afeeb 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
+@@ -248,6 +248,12 @@ public class DozeMachine {
+         }
+     }
+ 
++    void onDozeTimeTick() {
++        for (Part part : mParts) {
++            part.onDozeTimeTick();
++        }
++    }
++
+     private void requestState(State requestedState, int pulseReason) {
+         Assert.isMainThread();
+         if (DEBUG) {
+@@ -504,6 +510,9 @@ public class DozeMachine {
+          */
+         default void onScreenState(int displayState) {}
+ 
++        /** Alerts that the time shown while dozing is about to be drawn again. */
++        default void onDozeTimeTick() {}
++
+         /** Sets the {@link DozeMachine} when this Part is associated with one. */
+         default void setDozeMachine(DozeMachine dozeMachine) {}
+     }
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
+index 6ee0dec04..cdacf7cc8 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeScreenState.java
+@@ -76,6 +76,7 @@ public class DozeScreenState implements DozeMachine.Part {
+     private final DozeMachine.Service mDozeService;
+     private final Handler mHandler;
+     private final Runnable mApplyPendingScreenState = this::applyPendingScreenState;
++    private final Runnable mEnterDozeSuspend = this::enterDozeSuspend;
+     private final DozeParameters mParameters;
+     private final DozeHost mDozeHost;
+     private final AuthController mAuthController;
+@@ -87,6 +88,7 @@ public class DozeScreenState implements DozeMachine.Part {
+     private final DozeInteractor mDozeInteractor;
+ 
+     private int mPendingScreenState = Display.STATE_UNKNOWN;
++    private boolean mDozeSuspendRequested;
+     private SettableWakeLock mWakeLock;
+ 
+     @Inject
+@@ -131,6 +133,15 @@ public class DozeScreenState implements DozeMachine.Part {
+     @Override
+     public void destroy() {
+         mAuthController.removeCallback(mAuthControllerCallback);
++        mHandler.removeCallbacks(mEnterDozeSuspend);
++    }
++
++    @Override
++    public void onDozeTimeTick() {
++        if (mDozeSuspendRequested && mParameters.getDozeSuspendEntryDelay() > 0) {
++            // The display takes the new minute in STATE_DOZE only.
++            dozeBeforeSuspend();
++        }
+     }
+ 
+     @Override
+@@ -142,6 +153,8 @@ public class DozeScreenState implements DozeMachine.Part {
+             // Make sure not to apply the screen state after DozeService was destroyed.
+             mPendingScreenState = Display.STATE_UNKNOWN;
+             mHandler.removeCallbacks(mApplyPendingScreenState);
++            mHandler.removeCallbacks(mEnterDozeSuspend);
++            mDozeSuspendRequested = false;
+ 
+             applyScreenState(screenState);
+             mWakeLock.setAcquired(false);
+@@ -233,6 +246,13 @@ public class DozeScreenState implements DozeMachine.Part {
+     private void applyScreenState(int screenState) {
+         if (screenState != Display.STATE_UNKNOWN) {
+             if (DEBUG) Log.d(TAG, "setDozeScreenState(" + screenState + ")");
++            mHandler.removeCallbacks(mEnterDozeSuspend);
++            mDozeSuspendRequested = screenState == Display.STATE_DOZE_SUSPEND;
++            if (mDozeSuspendRequested && mParameters.getDozeSuspendEntryDelay() > 0) {
++                mPendingScreenState = Display.STATE_UNKNOWN;
++                dozeBeforeSuspend();
++                return;
++            }
+             mDozeService.setDozeScreenState(screenState);
+             mDozeInteractor.setDozeScreenState(screenState);
+             if (screenState == Display.STATE_DOZE) {
+@@ -246,6 +266,24 @@ public class DozeScreenState implements DozeMachine.Part {
+         }
+     }
+ 
++    /**
++     * Stops in STATE_DOZE before STATE_DOZE_SUSPEND, for as long as the device asks for.
++     */
++    private void dozeBeforeSuspend() {
++        mHandler.removeCallbacks(mEnterDozeSuspend);
++        mDozeService.setDozeScreenState(Display.STATE_DOZE);
++        mDozeInteractor.setDozeScreenState(Display.STATE_DOZE);
++        mDozeScreenBrightness.updateBrightnessAndReady(false /* force */);
++        mWakeLock.setAcquired(true);
++        mHandler.postDelayed(mEnterDozeSuspend, mParameters.getDozeSuspendEntryDelay());
++    }
++
++    private void enterDozeSuspend() {
++        mDozeService.setDozeScreenState(Display.STATE_DOZE_SUSPEND);
++        mDozeInteractor.setDozeScreenState(Display.STATE_DOZE_SUSPEND);
++        mWakeLock.setAcquired(false);
++    }
++
+     private final AuthController.Callback mAuthControllerCallback = new AuthController.Callback() {
+         @Override
+         public void onAllAuthenticatorsRegistered(@BiometricAuthenticator.Modality int modality) {
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java b/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
+index 3b9c40537..1c4f4e282 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
+@@ -228,7 +228,7 @@ public class DozeSensors {
+                         dozeParameters.singleTapUsesProx(mDevicePosture) /* requiresProx */,
+                         false /* immediatelyReRegister */,
+                         mDevicePosture,
+-                        false
++                        dozeParameters.tapGestureRequiresAod() /* requiresAod */
+                 ),
+                 new TriggerSensor(
+                         findSensor(config.longPressSensorType()),
+diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
+index 91c6df3a1..371e6ef7e 100644
+--- a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
++++ b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
+@@ -232,7 +232,10 @@ public class DozeUi implements DozeMachine.Part {
+         verifyLastTimeTick();
+ 
+         // Keep wakelock until a frame has been pushed.
+-        mHandler.post(mWakeLock.wrap(mHost::dozeTimeTick));
++        mHandler.post(mWakeLock.wrap(() -> {
++            mMachine.onDozeTimeTick();
++            mHost.dozeTimeTick();
++        }));
+ 
+         mTimeTickScheduled = false;
+         scheduleTimeTick();
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+index 412dc32f7..fa8ac59eb 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+@@ -199,6 +199,19 @@ public class DozeParameters implements
+         return mResources.getBoolean(R.bool.doze_suspend_display_state_supported);
+     }
+ 
++    /**
++     * How long the display stays in STATE_DOZE on its way to STATE_DOZE_SUSPEND, in
++     * milliseconds. 0 if it goes there directly.
++     */
++    public int getDozeSuspendEntryDelay() {
++        return mResources.getInteger(R.integer.doze_suspend_entry_delay);
++    }
++
++    /** Whether the tap gesture is only used while the always-on display shows. */
++    public boolean tapGestureRequiresAod() {
++        return mResources.getBoolean(R.bool.doze_tap_gesture_requires_aod);
++    }
++
+     public int getPulseDuration() {
+         return getPulseInDuration() + getPulseVisibleDuration() + getPulseOutDuration();
+     }
+-- 
+2.53.0
+

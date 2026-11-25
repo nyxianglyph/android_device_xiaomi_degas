@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+
+     SPDX-License-Identifier: Apache-2.0
+-->
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.nyxianglyph.degas.parts"
+    android:sharedUserId="android.uid.system">
+
+    <application
+        android:name=".PartsApplication"
+        android:defaultToDeviceProtectedStorage="true"
+        android:directBootAware="true"
+        android:label="Degas parts"
+        android:persistent="true" />
+</manifest>

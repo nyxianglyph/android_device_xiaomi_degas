@@ -23,6 +23,28 @@
     <item name="config_screenBrightnessSettingMaximumFloat" format="float" type="dimen">1.0</item>
     <item name="config_screenBrightnessSettingDefaultFloat" format="float" type="dimen">0.4</item>
     <integer name="config_screenBrightnessDoze">5</integer>
+    <item name="config_screenBrightnessDozeFloat" format="float" type="dimen">0.019607844</item>
+
+    <!-- Ambient display. The panel has a low power mode of its own and the
+         display HAL reports it, so the always-on display can be offered; it
+         stays off until it is turned on in the settings. -->
+    <string name="config_dozeComponent" translatable="false">com.android.systemui/com.android.systemui.doze.DozeService</string>
+    <bool name="config_dozeAlwaysOnDisplayAvailable">true</bool>
+
+    <!-- What the touch controller sees while the display dozes, as sensors
+         (sensors/): a finger on the fingerprint sensor, so that the
+         fingerprint can be read from the always-on display, and a tap. The
+         stock xiaomi.sensor.fod is not used: it fires when the phone is
+         moved, not when it is touched. -->
+    <string name="config_dozeUdfpsLongPressSensorType" translatable="false">com.nyxianglyph.sensor.udfps</string>
+    <string name="config_dozeTapSensorType" translatable="false">com.nyxianglyph.sensor.tap</string>
+    <!-- The same finger report comes from the dark panel, so unlocking with
+         the screen off can be offered as a setting; it is off by default. -->
+    <bool name="config_screen_off_udfps_enabled">true</bool>
+
+    <!-- The touch controller reports a double tap on the dark screen as
+         KEY_WAKEUP; parts/ turns that on and off with the setting. -->
+    <bool name="config_supportDoubleTapWake">true</bool>
 
     <!-- Ambient light sensor and the stock auto brightness curve (lux to
          backlight). -->
