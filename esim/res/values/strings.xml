@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="app_name">eSIM switch</string>
+    <string name="tile_label">eSIM</string>
+    <string name="tile_esim">SIM 2 is the eSIM</string>
+    <string name="tile_card">SIM 2 is the card</string>
+    <string name="dialog_to_esim">Use the built-in eSIM as SIM 2? The card in the second slot is switched off until you change back.</string>
+    <string name="dialog_to_card">Use the card in the second slot as SIM 2? The eSIM is switched off until you change back.</string>
+</resources>

@@ -52,6 +52,12 @@
          the screen off can be offered as a setting; it is off by default. -->
     <bool name="config_screen_off_udfps_enabled">true</bool>
 
+    <!-- The second SIM slot is the card tray or the built-in eSIM chip,
+         whichever the modem is told to use (esim/). -->
+    <integer-array name="non_removable_euicc_slots">
+        <item>1</item>
+    </integer-array>
+
     <!-- The touch controller reports a double tap on the dark screen as
          KEY_WAKEUP; parts/ turns that on and off with the setting. -->
     <bool name="config_supportDoubleTapWake">true</bool>

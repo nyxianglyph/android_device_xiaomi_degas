@@ -195,6 +195,15 @@ PRODUCT_PACKAGES += \
 PRODUCT_COPY_FILES += \
     $(LOCAL_PATH)/configs/sensors/hals.conf:$(TARGET_COPY_OUT_VENDOR)/etc/sensors/hals.conf
 
+# eSIM: OpenEUICC manages the profiles, DegasEsim is the quick settings tile
+# that switches the second SIM slot between the card tray and the eSIM chip.
+PRODUCT_PACKAGES += \
+    DegasEsim \
+    OpenEUICC
+
+PRODUCT_COPY_FILES += \
+    frameworks/native/data/etc/android.hardware.telephony.euicc.mep.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/permissions/android.hardware.telephony.euicc.mep.xml
+
 # Xiaomi HIDL interface libraries the stock blobs link, built from
 # hardware/xiaomi instead of taken from stock (class "interface").
 PRODUCT_PACKAGES += \
