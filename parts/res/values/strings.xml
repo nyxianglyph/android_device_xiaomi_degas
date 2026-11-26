@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!--
+     Copyright (C) 2026 nyxianglyph
+
+     SPDX-License-Identifier: Apache-2.0
+-->
+<resources>
+    <string name="dolby_title" translatable="false">Dolby Atmos</string>
+    <string name="dolby_summary" translatable="false">Profile, equalizer and sound enhancements</string>
+    <string name="dolby_enable" translatable="false">Use Dolby Atmos</string>
+    <string name="dolby_profile" translatable="false">Profile</string>
+    <string-array name="dolby_profile_names" translatable="false">
+        <item>Dynamic</item>
+        <item>Movie</item>
+        <item>Music</item>
+    </string-array>
+    <string name="dolby_sound" translatable="false">Sound</string>
+    <string name="dolby_bass" translatable="false">Bass enhancer</string>
+    <string name="dolby_dialogue" translatable="false">Dialogue enhancer</string>
+    <string name="dolby_dialogue_amount" translatable="false">Dialogue enhancer level</string>
+    <string name="dolby_leveler" translatable="false">Volume leveler</string>
+    <string name="dolby_leveler_summary" translatable="false">Keeps the loudness even between tracks and apps</string>
+    <string name="dolby_speaker_virtualizer" translatable="false">Surround on the speakers</string>
+    <string name="dolby_headphone_virtualizer" translatable="false">Surround on headphones</string>
+    <string name="dolby_equalizer" translatable="false">Equalizer, from bass to treble</string>
+    <string name="dolby_preset" translatable="false">Preset</string>
+    <string name="dolby_preset_custom" translatable="false">Custom</string>
+    <string-array name="dolby_preset_names" translatable="false">
+        <item>Flat</item>
+        <item>Bass</item>
+        <item>Treble</item>
+        <item>Vocal</item>
+        <item>Bass and treble</item>
+    </string-array>
+    <string name="dolby_band" translatable="false">Band %1$d</string>
+    <string name="dolby_reset" translatable="false">Reset this profile</string>
+    <string name="dolby_reset_summary" translatable="false">Brings back the settings the profile came with</string>
+</resources>
