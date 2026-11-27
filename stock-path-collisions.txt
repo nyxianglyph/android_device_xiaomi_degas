@@ -3,18 +3,14 @@
 # manifest, the files listed in tools/gen-proprietary-files.py DROP_ON_COLLISION
 # are left out, all others are installed as <name>-v34<ext> and the stock files
 # that name them are patched (extract-files.py).
-vendor/etc/init/android.hardware.audio.service.mediatek.rc
 vendor/etc/init/android.hardware.drm-service.clearkey.rc
-vendor/etc/init/android.hardware.health-service.example.rc
 vendor/etc/init/android.hardware.ir-service.example.rc
 vendor/etc/init/android.hardware.security.keymint-service.strongbox.nxp.rc
 vendor/etc/init/android.hardware.sensors-service-multihal.rc
 vendor/etc/init/android.hardware.weaver-service.nxp.rc
 vendor/etc/init/android.hardware.wifi-service-lazy.rc
 vendor/etc/init/hw/init.mt6897.usb.rc
-vendor/etc/init/memtrack-mediatek.rc
 vendor/etc/init/nfc-service-nxp.rc
-vendor/etc/init/wlan_assistant.rc
 vendor/etc/mkshrc
 vendor/etc/permissions/android.hardware.audio.low_latency.prebuilt.xml
 vendor/etc/permissions/android.hardware.bluetooth.prebuilt.xml
@@ -34,6 +30,7 @@ vendor/etc/permissions/android.hardware.sensor.proximity.prebuilt.xml
 vendor/etc/permissions/android.hardware.sensor.stepcounter.prebuilt.xml
 vendor/etc/permissions/android.hardware.sensor.stepdetector.prebuilt.xml
 vendor/etc/permissions/android.hardware.telephony.ims.prebuilt.xml
+vendor/etc/permissions/android.hardware.touchscreen.multitouch.distinct.prebuilt.xml
 vendor/etc/permissions/android.hardware.usb.accessory.prebuilt.xml
 vendor/etc/permissions/android.hardware.usb.host.prebuilt.xml
 vendor/etc/permissions/android.hardware.vulkan.compute-0.prebuilt.xml
@@ -48,10 +45,7 @@ vendor/etc/permissions/android.software.opengles.deqp.level-2023-03-01.prebuilt.
 vendor/etc/permissions/android.software.verified_boot.prebuilt.xml
 vendor/etc/permissions/android.software.vulkan.deqp.level-2023-03-01.prebuilt.xml
 vendor/etc/permissions/handheld_core_hardware.prebuilt.xml
-vendor/etc/vintf/manifest/android.hardware.health-service.example.xml
 vendor/etc/vintf/manifest/android.hardware.security.keymint-service.strongbox.nxp.xml
 vendor/etc/vintf/manifest/android.hardware.security.sharedsecret-service.strongbox.nxp.xml
 vendor/etc/vintf/manifest/android.hardware.weaver-service.nxp.xml
-vendor/etc/vintf/manifest/bluetooth_audio.xml
-vendor/etc/vintf/manifest/memtrack-mediatek.xml
 vendor/framework/androidx.camera.extensions.impl.jar

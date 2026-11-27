@@ -38,9 +38,9 @@
         <fqname>@7.0::IEffectsFactory/default</fqname>
     </hal>
     <hal format="hidl">
-        <name>android.hardware.bluetooth</name>
+        <name>vendor.mediatek.hardware.bluetooth.audio</name>
         <transport>hwbinder</transport>
-        <fqname>@1.1::IBluetoothHci/default</fqname>
+        <fqname>@2.2::IBluetoothAudioProvidersFactory/default</fqname>
     </hal>
     <hal format="hidl">
         <name>android.hardware.graphics.mapper</name>
@@ -154,11 +154,6 @@
     <hal format="aidl">
         <name>vendor.mediatek.hardware.audio</name>
         <fqname>IMtkAudio/default</fqname>
-    </hal>
-    <hal format="hidl">
-        <name>vendor.mediatek.hardware.bluetooth.audio</name>
-        <transport>hwbinder</transport>
-        <fqname>@2.2::IBluetoothAudioProvidersFactory/default</fqname>
     </hal>
     <hal format="aidl">
         <name>vendor.mediatek.hardware.camera.atms</name>

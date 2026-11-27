@@ -1,12 +1,12 @@
 # How stock vendor files whose name a source module also uses are handled.
 # Generated from the install conflicts of a build (see tools/classify-shadowing.py).
 #   interface  frozen HIDL/AIDL interface library: use the source build
-#   source     generic AOSP tool or service: use the source build
+#   source     generic AOSP tool or service, or an open source replacement in
+#              hardware/mediatek: use the source build
 #   vendor     vendor-only source module of the same name: the stock prebuilt wins (prefer)
 #   v34bin     stock binary named like a hardware/mediatek module: installed as <name>-v34,
 #              the stock init scripts are pointed at it
 #   v34        ABI-sensitive or versioned-AIDL library: keep the stock binary as <name>-v34.so
-interface android.frameworks.displayservice@1.0
 interface android.frameworks.sensorservice@1.0
 interface android.hardware.audio.common@5.0
 interface android.hardware.audio.common@6.0
@@ -55,16 +55,27 @@ interface android.hardware.sensors@2.0
 interface android.hardware.sensors@2.1
 interface android.hidl.allocator@1.0
 interface android.system.wifi.keystore@1.0
+interface vendor.mediatek.hardware.bluetooth.audio-V1-ndk
+interface vendor.mediatek.hardware.bluetooth.audio@2.1
+interface vendor.mediatek.hardware.bluetooth.audio@2.2
+interface vendor.mediatek.hardware.lbs@1.0
+interface vendor.mediatek.hardware.mtkpower-V1-ndk
 interface vendor.mediatek.hardware.mtkpower@1.0
 interface vendor.mediatek.hardware.mtkpower@1.1
 interface vendor.mediatek.hardware.mtkpower@1.2
+interface vendor.mediatek.hardware.netdagent@1.0
 interface vendor.nxp.nxpese@1.0
 interface vendor.xiaomi.hardware.displayfeature@1.0
 interface vendor.xiaomi.hardware.fx.tunnel@1.0
+source android.hardware.audio.service.mediatek
 source android.hardware.drm-service.clearkey
+source android.hardware.memtrack-service.mediatek
 source boringssl_self_test64
 source chipinfo
+source conninfra_loader
 source dmabuf_dump
+source libion_mtk
+source wlan_assistant
 v34 android.frameworks.sensorservice-V1-ndk
 v34 android.frameworks.stats-V1-ndk
 v34 android.hardware.audio.common-V1-ndk
@@ -199,20 +210,14 @@ v34 libvibratorutils
 v34 shared-file-region-aidl-cpp
 v34 vendor.mediatek.hardware.audio-V1-ndk
 v34 vendor.nxp.nxpnfc_aidl-V1-ndk
-v34bin android.hardware.audio.service.mediatek
-v34bin android.hardware.memtrack-service.mediatek
 v34bin android.hardware.thermal-service.mediatek
-v34bin wlan_assistant
 vendor android.hardware.contexthub-service.tinysys
-vendor android.hardware.health-service.example
 vendor android.hardware.ir-service.example
 vendor android.hardware.security.keymint-service.strongbox.nxp
 vendor android.hardware.sensors-service.multihal
 vendor android.hardware.weaver-service.nxp
 vendor android.hardware.wifi-service-lazy
 vendor ese_weaver.nxp
-vendor libbluetooth_audio_session
-vendor libbluetooth_audio_session_aidl
 vendor libcamera2ndk_vendor
 vendor libcodec2_hidl_plugin
 vendor libeffects

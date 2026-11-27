@@ -42,6 +42,33 @@ EXCLUDE = [
     # hardware/mediatek's chipinfo is the stock script and rc, byte for byte.
     r'vendor/etc/init/chipinfo_init\.rc',
     r'vendor/overlay/.*',  # HyperOS RROs; overlay/ holds our own values instead
+    # configs/sensors/hals.conf lists the stock sub-HALs and sensors.degas.
+    r'vendor/etc/sensors/hals\.conf',
+    # Built from hardware/mediatek and AOSP instead, see device.mk: the audio
+    # service that hosts the stock audio HAL, the Bluetooth HAL, Bluetooth
+    # audio (providers, session libraries, the audio HAL module), the health
+    # service, the memtrack service and wlan_assistant. The binaries that share
+    # their name with the source module go through stock-shadow-classes.txt.
+    # MediaTek's own HIDL providers and their session library stay stock: the
+    # stock audio HAL is reached through them for offloaded sessions.
+    r'vendor/etc/init/(android\.hardware\.audio\.service\.mediatek|memtrack-mediatek|wlan_assistant)\.rc',
+    r'vendor/etc/vintf/manifest/memtrack-mediatek\.xml',
+    r'vendor/bin/hw/android\.hardware\.bluetooth-service-mediatek',
+    # The older HIDL Bluetooth service, which nothing talks to once the AIDL
+    # one is there.
+    r'vendor/bin/hw/android\.hardware\.bluetooth@1\.1-service-mediatek',
+    r'vendor/etc/init/android\.hardware\.bluetooth@1\.1-service-mediatek\.rc',
+    r'vendor/lib(64)?/hw/android\.hardware\.bluetooth@1\.1-impl-mediatek\.so',
+    r'vendor/etc/init/android\.hardware\.bluetooth-service-mediatek\.rc',
+    r'vendor/etc/vintf/manifest/android\.hardware\.bluetooth-service-mediatek\.xml',
+    r'vendor/lib(64)?/android\.hardware\.bluetooth\.audio-impl-mediatek\.so',
+    r'vendor/lib(64)?/libbluetooth_audio_session(_aidl|_aidl_mtk)?\.so',
+    r'vendor/lib(64)?/hw/audio\.bluetooth\.default\.so',
+    r'vendor/lib(64)?/hw/android\.hardware\.bluetooth\.audio@2\.[0-2]-impl\.so',
+    r'vendor/etc/vintf/manifest/bluetooth_audio\.xml',
+    r'vendor/bin/hw/android\.hardware\.health-service\.example',
+    r'vendor/etc/init/android\.hardware\.health-service\.example\.rc',
+    r'vendor/etc/vintf/manifest/android\.hardware\.health-service\.example\.xml',
     # The AOSP example CAS service; the source build ships the CAS APEX.
     r'vendor/bin/hw/android\.hardware\.cas-service\.example',
     r'vendor/etc/init/cas-default\.rc',
@@ -97,6 +124,11 @@ DROP_ON_COLLISION = re.compile(r'vendor/etc/mkshrc|vendor/etc/init/android\.hard
 INSTALL_AS = {
     # hw_get_module_by_class() only finds <id>.<class>.<variant>.so.
     'odm/lib64/hw/fingerprint.goodix_fod.so': 'odm/lib64/hw/fingerprint.goodix_fod.default.so',
+    # MediaTek's GNSS library. external/libmnl, a netlink library, is
+    # installed to vendor/lib64 under the same file name, where the stock
+    # vendor has a link to this one: it goes there as libmnl-v34.so instead
+    # and extract-files.py points mnld at it.
+    'vendor/lib64/mt6897/libmnl.so': 'vendor/lib64/libmnl-v34.so',
 }
 
 
@@ -244,6 +276,10 @@ def main():
             renamed[rel] = rel + '-v34'
 
     renamed.update({rel: dst for rel, dst in INSTALL_AS.items() if rel in files})
+    for rel, dst in INSTALL_AS.items():
+        # The stock links to a file that moves would hang or clash.
+        if rel in files and os.path.dirname(rel) != os.path.dirname(dst):
+            links.pop(rel, None)
 
     suffixes = lib_suffixes(files)
     shadowing = set()

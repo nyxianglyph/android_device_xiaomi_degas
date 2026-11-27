@@ -10,7 +10,10 @@ LOCAL_PATH := device/xiaomi/degas
 # tools/gen-proprietary-files.py. This file only adds what the stock
 # vendor does not carry or what the Android build has to produce itself.
 
-PRODUCT_SHIPPING_API_LEVEL := 34
+# hardware/mediatek's product makefiles read the board's level, before
+# BoardConfig.mk is read.
+BOARD_SHIPPING_API_LEVEL := 34
+PRODUCT_SHIPPING_API_LEVEL := $(BOARD_SHIPPING_API_LEVEL)
 
 # The stock vendor libraries link against VNDK 34.
 PRODUCT_EXTRA_VNDK_VERSIONS := 34
@@ -19,6 +22,7 @@ PRODUCT_EXTRA_VNDK_VERSIONS := 34
 PRODUCT_SOONG_NAMESPACES += \
     $(LOCAL_PATH) \
     hardware/mediatek \
+    hardware/mediatek/libion_mtk \
     hardware/xiaomi
 
 # Dynamic partitions / Virtual A/B
@@ -66,9 +70,32 @@ PRODUCT_COPY_FILES += \
 PRODUCT_PACKAGES += \
     android.hardware.drm-service.clearkey \
     chipinfo \
+    conninfra_loader \
     dmabuf_dump.vendor \
+    libion_mtk \
+    vendor.mediatek.hardware.lbs@1.0.vendor \
+    vendor.mediatek.hardware.mtkpower-V1-ndk.vendor \
+    vendor.mediatek.hardware.netdagent@1.0.vendor \
     vendor.nxp.nxpese@1.0.vendor \
     vndservicemanager
+
+# Services built from hardware/mediatek and AOSP in place of the stock ones.
+# The audio service hosts the stock audio HAL; Bluetooth audio is the AOSP
+# provider with MediaTek's adapter, which hands offloaded sessions to that
+# HAL the way its own provider did, and the three interface libraries are
+# what the stock audio HAL and power HAL link.
+PRODUCT_PACKAGES += \
+    android.hardware.audio.service.mediatek \
+    android.hardware.bluetooth-service.mediatek \
+    android.hardware.bluetooth.audio-impl \
+    android.hardware.bluetooth.audio-impl-mediatek-hidl \
+    android.hardware.health-service.mediatek \
+    android.hardware.memtrack-service.mediatek \
+    audio.bluetooth.default \
+    vendor.mediatek.hardware.bluetooth.audio-V1-ndk.vendor \
+    vendor.mediatek.hardware.bluetooth.audio@2.1.vendor \
+    vendor.mediatek.hardware.bluetooth.audio@2.2.vendor \
+    wlan_assistant
 
 # VNDK v34 libraries the stock vendor and odm blobs link against. HyperOS loads
 # them from the com.android.vndk.v34 APEX, but this vendor mixes in modules
@@ -95,7 +122,6 @@ PRODUCT_PACKAGES += \
     android.hardware.secure_element@1.0.vendor \
     android.hardware.secure_element@1.2.vendor \
     android.hidl.allocator@1.0.vendor \
-    android.system.suspend@1.0.vendor \
     libaudioutils.vendor \
     libbinder.vendor \
     libcamera_metadata.vendor \

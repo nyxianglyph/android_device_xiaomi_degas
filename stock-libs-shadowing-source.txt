@@ -1,4 +1,3 @@
-android.frameworks.displayservice@1.0
 android.frameworks.sensorservice-V1-ndk
 android.frameworks.sensorservice@1.0
 android.frameworks.stats-V1-ndk
@@ -147,6 +146,7 @@ audioclient-types-aidl-cpp
 av-types-aidl-cpp
 awk
 chipinfo
+conninfra_loader
 dmabuf_dump
 dumpsys
 ese_weaver.nxp
@@ -165,8 +165,6 @@ libaudioclient_aidl_conversion
 libaudiofoundation
 libavservices_minijail
 libbinderdebug
-libbluetooth_audio_session
-libbluetooth_audio_session_aidl
 libbt-vendor
 libcamera2ndk_vendor
 libcodec2_hidl@1.0
@@ -182,10 +180,12 @@ libeffects
 libeffectsconfig
 libext2_uuid
 libflatbuffers-cpp
+libformatter
 libhidltransport
 libhidparser
 libhwbinder
 libimage_io
+libion_mtk
 libjc_keymint.nxp
 libjc_keymint_transport.nxp
 libjpegdecoder
@@ -236,9 +236,15 @@ shared-file-region-aidl-cpp
 sqlite3
 test-nusensors
 vendor.mediatek.hardware.audio-V1-ndk
+vendor.mediatek.hardware.bluetooth.audio-V1-ndk
+vendor.mediatek.hardware.bluetooth.audio@2.1
+vendor.mediatek.hardware.bluetooth.audio@2.2
+vendor.mediatek.hardware.lbs@1.0
+vendor.mediatek.hardware.mtkpower-V1-ndk
 vendor.mediatek.hardware.mtkpower@1.0
 vendor.mediatek.hardware.mtkpower@1.1
 vendor.mediatek.hardware.mtkpower@1.2
+vendor.mediatek.hardware.netdagent@1.0
 vendor.nxp.nxpese@1.0
 vendor.nxp.nxpnfc_aidl-V1-ndk
 vendor.xiaomi.hardware.displayfeature@1.0

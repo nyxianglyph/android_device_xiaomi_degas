@@ -23,3 +23,22 @@ service vendor.thermal_scenario /vendor/bin/thermal-scenario.sh
     user system
     group system
     disabled
+
+# The audio service is built from hardware/mediatek. The stock audio HAL it
+# hosts expects what the stock service definition gave it on top of that: its
+# data directories, the socket of Xiaomi's audio additions and sdcard_rw.
+on post-fs-data
+    mkdir /data/vendor/audiohal 0771 system audio
+    mkdir /data/vendor/audio 0771 system audio
+
+service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service.mediatek
+    override
+    class hal
+    user audioserver
+    group audio camera drmrpc inet media mediadrm net_bt net_bt_admin net_bw_acct wakelock context_hub system sdcard_rw
+    capabilities BLOCK_SUSPEND SYS_NICE
+    rlimit rtprio 10 10
+    ioprio rt 4
+    task_profiles ProcessCapacityHigh HighPerformance
+    socket audio_hw_socket seqpacket 0666 system system
+    onrestart restart audioserver

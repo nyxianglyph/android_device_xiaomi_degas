@@ -27,6 +27,7 @@ import sys
 namespace_imports = [
     'device/xiaomi/degas',
     'hardware/mediatek',
+    'hardware/mediatek/libion_mtk',
     'hardware/xiaomi',
 ]
 
@@ -89,10 +90,14 @@ lib_fixups: lib_fixups_user_type = {
 # power and miperf services crash while parsing their XML tables.
 COMPAT_V34 = ('libtinyxml2',)
 
+# Stock libraries tools/gen-proprietary-files.py installs as <name>-v34.so for
+# another reason than their class (INSTALL_AS).
+RENAMED_V34 = ('libmnl',)
+
 
 def v34_users(dump):
     """Stock vendor/odm ELFs that need a library renamed to <name>-v34.so."""
-    names = {f'{n}.so' for n in v34_libs + COMPAT_V34}
+    names = {f'{n}.so' for n in v34_libs + COMPAT_V34 + RENAMED_V34}
     users = {}
     with open(os.path.join(here, 'proprietary-files.txt')) as f:
         # (stock path, installed path); fixups are keyed by the installed one.
@@ -119,6 +124,8 @@ def v34_users(dump):
 # link the v34 copies installed by tools/gen-vndk-v34.py instead.
 VNDK_V34_USERS = {
     'odm/bin/hw/vendor.xiaomi.sensor.citsensorservice.aidl': ('libui.so',),
+    'vendor/bin/aee_aedv64_v2': ('libcrypto.so',),
+    'vendor/bin/aee_dumpstatev_v2': ('libcrypto.so',),
     'vendor/bin/hw/wpa_supplicant': ('libcrypto.so', 'libssl.so'),
     'vendor/lib64/hw/mt6897/vendor.mediatek.hardware.pq_aidl-impl.so': ('libui.so',),
     # The Codec2 services: libcodec2_vndk-v34 needs the v34 libui, and every
@@ -283,6 +290,10 @@ blob_fixups: blob_fixups_user_type = {
     # service: mfp-daemon is replaced (see tools/gen-proprietary-files.py).
     'vendor/etc/init/init.mfp-daemon.aidl.rc': blob_fixup()
         .regex_replace(r'service mfp-daemon [^\n]*\n(?:[ \t]+[^\n]*\n)+', ''),
+    # conninfra_loader is built from hardware/mediatek and brings its own
+    # service; the rest of the stock rc (log directories, dump services) stays.
+    'vendor/etc/init/hw/init_conninfra.rc': blob_fixup()
+        .regex_replace(r'service conninfra_loader [^\n]*\n(?:[ \t]+[^\n]*\n)+', ''),
 }  # fmt: skip
 
 module = ExtractUtilsModule(
