@@ -81,3 +81,8 @@ allow {
 # to be started as wifi by init.
 allow hal_wifi_supplicant_default self:capability { setgid setuid };
 
+# The stock policy grants these to the camera HAL under its stock domain name;
+# here it runs as mtk_hal_camera. The flash's thermal limit and the battery
+# state it reads before firing.
+allow mtk_hal_camera sys_thermal_torch_real_level:file { getattr open write append lock map };
+allow mtk_hal_camera sysfs_battery_supply:dir search;
