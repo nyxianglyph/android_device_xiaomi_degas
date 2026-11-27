@@ -54,3 +54,30 @@ get_prop(mtk_hal_mmlpq, boot_status_prop)
 set_prop(batterysecret, vendor_batterysecret_prop)
 dontaudit mtk_hal_mbrain default_prop:file r_file_perms;
 dontaudit hal_touchfeature_xiaomi_default default_prop:file r_file_perms;
+
+# The Mali driver looks up its platform service from inside every process
+# that draws. The stock policy allowed that to nearly every domain, a set
+# that today holds domains which may look up no such service. Apps get the
+# lookup from the MediaTek policy; the vendor side and the system processes
+# that draw get it here.
+allow {
+    domain
+    -coredomain
+    -hal_configstore_server
+    -vendor_init
+} mtk_hal_mali_platform_default_service:service_manager find;
+allow {
+    bootanim
+    cameraserver
+    gpuservice
+    mediaserver
+    mediaswcodec
+    surfaceflinger
+    system_server
+} mtk_hal_mali_platform_default_service:service_manager find;
+
+# The stock Wi-Fi supplicant starts as root and switches to the wifi user
+# itself. Platform policy stopped granting that when its own supplicant began
+# to be started as wifi by init.
+allow hal_wifi_supplicant_default self:capability { setgid setuid };
+
