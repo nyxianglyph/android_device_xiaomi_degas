@@ -1,7 +1,7 @@
-From 1b2a22a544af12a4085fa513b3a9f478b6143335 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
 Date: Tue, 24 Nov 2026 09:49:37 +0300
-Subject: [PATCH 2/2] SystemUI: hold the UDFPS refresh rate while the sensor
+Subject: [PATCH 2/3] SystemUI: hold the UDFPS refresh rate while the sensor
  area is shown
 
 A device that sets config_udfpsRefreshRate lights its sensor cleanly at
@@ -18,7 +18,7 @@ a mode switch. Devices that leave the config at 0 are not affected.
  1 file changed, 27 insertions(+)
 
 diff --git a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
-index 57af042c3..1115e677b 100644
+index 80a815505..c0f88a6ab 100644
 --- a/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
 +++ b/packages/SystemUI/src/com/android/systemui/biometrics/UdfpsController.java
 @@ -53,6 +53,7 @@ import android.os.CancellationSignal;
@@ -29,7 +29,7 @@ index 57af042c3..1115e677b 100644
  import android.os.Trace;
  import android.os.VibrationAttributes;
  import android.os.VibrationEffect;
-@@ -229,6 +230,11 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+@@ -228,6 +229,11 @@ public class UdfpsController implements DozeReceiver, Dumpable {
      // The current request from FingerprintService. Null if no current request.
      @Nullable UdfpsControllerOverlay mOverlay;
  
@@ -41,16 +41,16 @@ index 57af042c3..1115e677b 100644
      // The fingerprint AOD trigger doesn't provide an ACTION_UP/ACTION_CANCEL event to tell us when
      // to turn off high brightness mode. To get around this limitation, the state of the AOD
      // interrupt is being tracked and a timeout is used as a last resort to turn off high brightness
-@@ -851,6 +857,8 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+@@ -853,6 +859,8 @@ public class UdfpsController implements DozeReceiver, Dumpable {
          mDumpManager.registerDumpable(TAG, this);
- 
+         
          mAuthController = authController;
 +        mHoldRefreshRate = mContext.getResources()
 +                .getInteger(R.integer.config_udfpsRefreshRate) > 0;
  
          mOrientationListener = new BiometricDisplayListener(
                  context,
-@@ -998,6 +1006,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+@@ -1003,6 +1011,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
              mOnFingerDown = false;
              mAttemptedToDismissKeyguard = false;
              mOrientationListener.enable();
@@ -58,15 +58,15 @@ index 57af042c3..1115e677b 100644
              if (mFingerprintManager != null) {
                  mFingerprintManager.onUdfpsUiEvent(FingerprintManager.UDFPS_UI_OVERLAY_SHOWN,
                          overlay.getRequestId(), mSensorProps.sensorId);
-@@ -1022,6 +1031,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
-                 onFingerUp(mOverlay.getRequestId(), oldView);
+@@ -1036,6 +1045,7 @@ public class UdfpsController implements DozeReceiver, Dumpable {
              }
+ 
              final boolean removed = mOverlay.hide();
 +            holdRefreshRate(false);
-             mKeyguardViewManager.hideAlternateBouncer(true);
-             hideUdfpsAnimation();
-             Log.v(TAG, "hideUdfpsOverlay | removing window: " + removed);
-@@ -1038,6 +1048,23 @@ public class UdfpsController implements DozeReceiver, Dumpable {
+             mKeyguardViewManager.hideAlternateBouncer(
+                     /* updateScrim */ true,
+                     /* clearDismissAction */ false
+@@ -1055,6 +1065,23 @@ public class UdfpsController implements DozeReceiver, Dumpable {
          mOrientationListener.disable();
      }
  
@@ -90,6 +90,3 @@ index 57af042c3..1115e677b 100644
      private void unconfigureDisplay(View view) {
          if (!isOptical() || !(view instanceof UdfpsTouchOverlay udfpsView)) {
              return;
--- 
-2.53.0
-

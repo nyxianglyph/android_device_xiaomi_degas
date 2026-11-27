@@ -1,4 +1,4 @@
-From 5d9962d0e51fb50be506b97e186af9cc33ace1d6 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
 Date: Tue, 24 Nov 2026 10:08:11 +0300
 Subject: [PATCH] telephony: name a network from the carrier list when the
@@ -18,7 +18,7 @@ the modem does know is left alone.
  1 file changed, 38 insertions(+), 1 deletion(-)
 
 diff --git a/src/java/com/android/internal/telephony/ServiceStateTracker.java b/src/java/com/android/internal/telephony/ServiceStateTracker.java
-index f28e250..e488436 100644
+index be7a642..bfe82f3 100644
 --- a/src/java/com/android/internal/telephony/ServiceStateTracker.java
 +++ b/src/java/com/android/internal/telephony/ServiceStateTracker.java
 @@ -319,6 +319,10 @@ public class ServiceStateTracker extends Handler {
@@ -32,7 +32,7 @@ index f28e250..e488436 100644
      private boolean mImsRegistrationOnOff = false;
      @UnsupportedAppUsage(maxTargetSdk = Build.VERSION_CODES.R, trackingBug = 170729553)
      private boolean mDeviceShuttingDown = false;
-@@ -1807,6 +1811,28 @@ public class ServiceStateTracker extends Handler {
+@@ -1813,6 +1817,28 @@ public class ServiceStateTracker extends Handler {
          }
      }
  
@@ -61,26 +61,23 @@ index f28e250..e488436 100644
      protected void handlePollStateResultMessage(int what, AsyncResult ar) {
          int[] ints;
          switch (what) {
-@@ -1891,7 +1917,18 @@ public class ServiceStateTracker extends Handler {
-                         log("EVENT_POLL_STATE_OPERATOR: use brandOverride=" + brandOverride);
-                         mNewSS.setOperatorName(brandOverride, brandOverride, opNames[2]);
-                     } else {
--                        mNewSS.setOperatorName(opNames[0], opNames[1], opNames[2]);
-+                        String longName = opNames[0];
-+                        String shortName = opNames[1];
-+                        if (isOperatorNameMissing(longName, opNames[2])) {
-+                            final String listed = getOperatorNameFromCarrierList(opNames[2]);
-+                            if (listed != null) {
-+                                longName = listed;
-+                                if (isOperatorNameMissing(shortName, opNames[2])) {
-+                                    shortName = listed;
+@@ -1902,7 +1928,18 @@ public class ServiceStateTracker extends Handler {
+                             log("EVENT_POLL_STATE_OPERATOR: use brandOverride=" + brandOverride);
+                             mNewSS.setOperatorName(brandOverride, brandOverride, opNames[2]);
+                         } else {
+-                            mNewSS.setOperatorName(opNames[0], opNames[1], opNames[2]);
++                            String longName = opNames[0];
++                            String shortName = opNames[1];
++                            if (isOperatorNameMissing(longName, opNames[2])) {
++                                final String listed = getOperatorNameFromCarrierList(opNames[2]);
++                                if (listed != null) {
++                                    longName = listed;
++                                    if (isOperatorNameMissing(shortName, opNames[2])) {
++                                        shortName = listed;
++                                    }
 +                                }
 +                            }
-+                        }
-+                        mNewSS.setOperatorName(longName, shortName, opNames[2]);
-                     }
-                 }
-                 break;
--- 
-2.53.0
-
++                            mNewSS.setOperatorName(longName, shortName, opNames[2]);
+                         }
+                     } else {
+                         // If the config is NOT loaded, we intentionally discard the network name.

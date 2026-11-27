@@ -1,6 +1,6 @@
-From 2cf77f5e5ecbd3af3378a39858eadd1853931646 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
-Date: Tue, 24 Nov 2026 11:51:44 +0300
+Date: Thu, 26 Nov 2026 20:53:45 +0300
 Subject: [PATCH] Do not build what crDroid brings itself
 
 Two files of MindTheGapps are part of a crDroid build already, and with
@@ -17,47 +17,48 @@ The files stay where they are; only the modules and their package
 entries go.
 ---
  arm64/Android.bp             | 7 -------
- arm64/arm64-vendor.mk        | 3 +--
+ arm64/arm64-vendor.mk        | 1 -
  common/Android.bp            | 8 --------
  common/common-vendor.mk      | 1 -
  proprietary-files-arm64.txt  | 1 -
  proprietary-files-common.txt | 1 -
- 6 files changed, 1 insertion(+), 20 deletions(-)
+ 6 files changed, 19 deletions(-)
 
 diff --git a/arm64/Android.bp b/arm64/Android.bp
-index 5646a29..e942c16 100644
+index c800163..1a83492 100644
 --- a/arm64/Android.bp
 +++ b/arm64/Android.bp
-@@ -106,10 +106,3 @@ android_app_import {
-     },
+@@ -94,13 +94,6 @@ android_app_import {
      product_specific: true,
  }
--
+ 
 -cc_prebuilt_library_shared {
 -    name: "libjni_latinimegoogle",
 -    srcs: ["proprietary/product/lib64/libjni_latinimegoogle.so"],
 -    prefer: true,
 -    product_specific: true,
 -}
+-
+ prebuilt_apex {
+     name: "com.google.android.gmssystem.prodvic",
+     owner: "gapps",
 diff --git a/arm64/arm64-vendor.mk b/arm64/arm64-vendor.mk
-index af0154a..a6f9aa6 100644
+index 8880865..cc7d359 100644
 --- a/arm64/arm64-vendor.mk
 +++ b/arm64/arm64-vendor.mk
-@@ -6,8 +6,7 @@ PRODUCT_SOONG_NAMESPACES += \
+@@ -6,7 +6,6 @@ PRODUCT_SOONG_NAMESPACES += \
  
  PRODUCT_PACKAGES += \
-     GmsCore \
--    Phonesky \
--    libjni_latinimegoogle
-+    Phonesky
+     Phonesky \
+-    libjni_latinimegoogle \
+     com.google.android.gmssystem.prodvic
  
  ifeq ($(TARGET_IS_GROUPER),)
- PRODUCT_PACKAGES += \
 diff --git a/common/Android.bp b/common/Android.bp
-index 530614b..a23d56b 100644
+index f84d5a2..a6fca59 100644
 --- a/common/Android.bp
 +++ b/common/Android.bp
-@@ -180,14 +180,6 @@ prebuilt_etc {
+@@ -188,14 +188,6 @@ prebuilt_etc {
      product_specific: true,
  }
  
@@ -73,37 +74,34 @@ index 530614b..a23d56b 100644
      name: "privapp-permissions-google-product.xml",
      src: "proprietary/product/etc/permissions/privapp-permissions-google-product.xml",
 diff --git a/common/common-vendor.mk b/common/common-vendor.mk
-index ba808c9..c0aaaba 100644
+index 6f4321e..30856b1 100644
 --- a/common/common-vendor.mk
 +++ b/common/common-vendor.mk
-@@ -20,7 +20,6 @@ PRODUCT_PACKAGES += \
+@@ -21,7 +21,6 @@ PRODUCT_PACKAGES += \
      gapps.rc \
      gms_fsverity_cert.der \
      google-hiddenapi-package-allowlist.xml \
 -    google.xml \
      privapp-permissions-google-product.xml \
-     privapp-permissions-google-system-ext.xml \
+     privapp-permissions-google-system_ext.xml \
      privapp-permissions-mtg.xml \
 diff --git a/proprietary-files-arm64.txt b/proprietary-files-arm64.txt
-index 987683c..615d324 100644
+index a479c0c..a184fb2 100644
 --- a/proprietary-files-arm64.txt
 +++ b/proprietary-files-arm64.txt
 @@ -1,3 +1,2 @@
+ product/apex/com.google.android.gmssystem.prodvic.apex;APPS=PrebuiltGmsCoreVic
 -product/lib64/libjni_latinimegoogle.so|08ca8391a1816da0c417a3882e72dabb4091fd3c
- product/priv-app/GmsCore/GmsCore.apk;PRESIGNED
  product/priv-app/Phonesky/Phonesky.apk;PRESIGNED
 diff --git a/proprietary-files-common.txt b/proprietary-files-common.txt
-index f6a4d59..045b33c 100644
+index 9f179b0..cc7e65d 100644
 --- a/proprietary-files-common.txt
 +++ b/proprietary-files-common.txt
-@@ -19,7 +19,6 @@ product/etc/permissions/privapp-permissions-mtg.xml|b8bcdbc95f03e6c3e50a015c092d
- product/etc/security/fsverity/gms_fsverity_cert.der
+@@ -20,7 +20,6 @@ product/etc/security/fsverity/gms_fsverity_cert.der
  
+ product/etc/sysconfig/allowed_apex_com.google.android.gmssystem.xml
  product/etc/sysconfig/d2d_cable_migration_feature.xml
 -product/etc/sysconfig/google.xml
  product/etc/sysconfig/sysconfig-mtg.xml|3ce29709a821b814657f8b9dbda4f5f6f2326e41
  system/etc/sysconfig/google-hiddenapi-package-allowlist.xml:product/etc/sysconfig/google-hiddenapi-package-allowlist.xml
  
--- 
-2.53.0
-

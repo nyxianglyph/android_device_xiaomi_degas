@@ -23,6 +23,9 @@ $(call inherit-product, $(SRC_TARGET_DIR)/product/virtual_ab_ota/launch_with_ven
 # Read by vendor/lineage's crdroid.mk, so it has to come before it.
 TARGET_SUPPORTS_BLUR := false
 
+# crDroid's camera face unlock, which the ROM no longer ships unless asked.
+TARGET_FACE_UNLOCK_SUPPORTED := true
+
 $(call inherit-product, device/xiaomi/degas/device.mk)
 $(call inherit-product, vendor/lineage/config/common_full_phone.mk)
 

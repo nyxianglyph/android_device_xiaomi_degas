@@ -27,7 +27,7 @@ It was released in September 2024.
 
 ## About this tree
 
-crDroid 16.0 (Android 16). Written from scratch; the vendor and odm partitions
+crDroid 17.0 (Android 17). Written from scratch; the vendor and odm partitions
 are rebuilt from the stock HyperOS Global `OS3.0.305.0.WNEMIXM` files, the
 kernel is
 [android_kernel_xiaomi_degas](https://github.com/nyxianglyph/android_kernel_xiaomi_degas/tree/android-6.1.157),
@@ -59,12 +59,11 @@ Not there yet:
 
 - VoWiFi and video calls over LTE are not set up
 - Background blur is off: it does not fit the 144 Hz frame time on this panel
-- No OTA updates yet; install is by fastboot
 
 ## Building
 
 ```sh
-repo init -u https://github.com/crdroidandroid/android.git -b 16.0 --git-lfs
+repo init -u https://github.com/crdroidandroid/android.git -b 17.0 --git-lfs
 ```
 
 Add to `.repo/local_manifests/degas.xml`:
@@ -72,11 +71,11 @@ Add to `.repo/local_manifests/degas.xml`:
 ```xml
 <?xml version="1.0" encoding="UTF-8"?>
 <manifest>
-  <project path="device/xiaomi/degas" name="nyxianglyph/android_device_xiaomi_degas" remote="github" revision="16.0" />
-  <project path="device/xiaomi/degas-kernel" name="nyxianglyph/android_device_xiaomi_degas-kernel" remote="github" revision="16.0" />
-  <project path="hardware/mediatek" name="LineageOS/android_hardware_mediatek" remote="github" revision="lineage-23.2" />
-  <project path="hardware/xiaomi" name="LineageOS/android_hardware_xiaomi" remote="github" revision="lineage-23.2" />
-  <project path="device/mediatek/sepolicy_vndr" name="LineageOS/android_device_mediatek_sepolicy_vndr" remote="github" revision="lineage-23.2" />
+  <project path="device/xiaomi/degas" name="nyxianglyph/android_device_xiaomi_degas" remote="github" revision="17.0" />
+  <project path="device/xiaomi/degas-kernel" name="nyxianglyph/android_device_xiaomi_degas-kernel" remote="github" revision="17.0" />
+  <project path="hardware/mediatek" name="LineageOS/android_hardware_mediatek" remote="github" revision="lineage-24.0" />
+  <project path="hardware/xiaomi" name="LineageOS/android_hardware_xiaomi" remote="github" revision="lineage-24.0" />
+  <project path="device/mediatek/sepolicy_vndr" name="LineageOS/android_device_mediatek_sepolicy_vndr" remote="github" revision="lineage-24.0" />
 </manifest>
 ```
 
@@ -84,7 +83,7 @@ Add to `.repo/local_manifests/degas.xml`:
 repo sync
 ```
 
-Five changes to the ROM source come with the tree, in `patches/`:
+Six changes to the ROM source come with the tree, in `patches/`:
 
 - two let a device choose the refresh rate for the fingerprint sensor and hold
   the display at it for as long as the sensor area is on screen; without them
@@ -94,10 +93,13 @@ Five changes to the ROM source come with the tree, in `patches/`:
 - one names a network from the carrier list when the modem reports only its
   number; without it some networks show as a number such as 28602;
 - one lets Aperture take the main cameras from an overlay and record 60 fps
-  video; without it the camera app offers one lens and 30 fps.
+  video; without it the camera app offers one lens and 30 fps;
+- one lets the boot class path hold Xiaomi's part of the stock MediaTek IMS
+  framework (`com.xiaomi.ims`); without it the build stops at
+  `check_boot_jars`.
 
 ```sh
-for dir in frameworks_base frameworks_opt_telephony packages_apps_Aperture; do
+for dir in build_soong frameworks_base frameworks_opt_telephony packages_apps_Aperture; do
     git -C "$(echo $dir | tr _ /)" am "$PWD"/device/xiaomi/degas/patches/$dir/*.patch
 done
 ```
@@ -111,7 +113,7 @@ cd device/xiaomi/degas
 ./extract-files.py /path/to/that/directory
 cd ../../..
 . build/envsetup.sh
-lunch lineage_degas-bp4a-userdebug
+lunch lineage_degas-cp2a-userdebug
 m bootimage initbootimage vendorbootimage systemimage systemextimage productimage \
   vendorimage odmimage vbmetaimage vbmetasystemimage vbmetavendorimage
 ```
@@ -126,7 +128,7 @@ largest apps are stored with Git LFS, so `git-lfs` has to be installed before
 cloning:
 
 ```sh
-git clone -b baklava https://gitlab.com/MindTheGapps/vendor_gapps.git vendor/gapps
+git clone -b cinnamonbun https://gitlab.com/MindTheGapps/vendor_gapps.git vendor/gapps
 git -C vendor/gapps am "$PWD"/device/xiaomi/degas/patches/vendor_gapps/*.patch
 m installclean
 WITH_GMS=true m bootimage initbootimage ...

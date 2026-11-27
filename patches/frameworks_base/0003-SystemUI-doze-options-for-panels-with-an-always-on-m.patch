@@ -1,8 +1,8 @@
-From 53ce4221a611492d615b534ccd639aeab4f5da0d Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
 Date: Wed, 25 Nov 2026 18:57:06 +0300
-Subject: [PATCH] SystemUI: doze options for panels with an always-on mode of
- their own
+Subject: [PATCH 3/3] SystemUI: doze options for panels with an always-on mode
+ of their own
 
 ---
  packages/SystemUI/res/values/config.xml       | 13 +++++++
@@ -14,10 +14,10 @@ Subject: [PATCH] SystemUI: doze options for panels with an always-on mode of
  6 files changed, 78 insertions(+), 2 deletions(-)
 
 diff --git a/packages/SystemUI/res/values/config.xml b/packages/SystemUI/res/values/config.xml
-index 3f1bc384f..bd5c54eb7 100644
+index e25cf317f..de7bdfb3e 100644
 --- a/packages/SystemUI/res/values/config.xml
 +++ b/packages/SystemUI/res/values/config.xml
-@@ -202,6 +202,19 @@
+@@ -192,6 +192,19 @@
      <!-- Doze: does this device support STATE_DOZE_SUSPEND?  -->
      <bool name="doze_suspend_display_state_supported">false</bool>
  
@@ -38,7 +38,7 @@ index 3f1bc384f..bd5c54eb7 100644
      <bool name="doze_pulse_on_significant_motion">false</bool>
  
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java b/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
-index 7cd141813..3c31afeeb 100644
+index b0d219554..7950de26a 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeMachine.java
 @@ -248,6 +248,12 @@ public class DozeMachine {
@@ -54,7 +54,7 @@ index 7cd141813..3c31afeeb 100644
      private void requestState(State requestedState, int pulseReason) {
          Assert.isMainThread();
          if (DEBUG) {
-@@ -504,6 +510,9 @@ public class DozeMachine {
+@@ -510,6 +516,9 @@ public class DozeMachine {
           */
          default void onScreenState(int displayState) {}
  
@@ -149,10 +149,10 @@ index 6ee0dec04..cdacf7cc8 100644
          @Override
          public void onAllAuthenticatorsRegistered(@BiometricAuthenticator.Modality int modality) {
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java b/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
-index 3b9c40537..1c4f4e282 100644
+index 38d5006df..b1cbbaf46 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeSensors.java
-@@ -228,7 +228,7 @@ public class DozeSensors {
+@@ -227,7 +227,7 @@ public class DozeSensors {
                          dozeParameters.singleTapUsesProx(mDevicePosture) /* requiresProx */,
                          false /* immediatelyReRegister */,
                          mDevicePosture,
@@ -162,10 +162,10 @@ index 3b9c40537..1c4f4e282 100644
                  new TriggerSensor(
                          findSensor(config.longPressSensorType()),
 diff --git a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
-index 91c6df3a1..371e6ef7e 100644
+index 8489fd8ee..346ecd425 100644
 --- a/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
 +++ b/packages/SystemUI/src/com/android/systemui/doze/DozeUi.java
-@@ -232,7 +232,10 @@ public class DozeUi implements DozeMachine.Part {
+@@ -242,7 +242,10 @@ public class DozeUi implements DozeMachine.Part {
          verifyLastTimeTick();
  
          // Keep wakelock until a frame has been pushed.
@@ -178,10 +178,10 @@ index 91c6df3a1..371e6ef7e 100644
          mTimeTickScheduled = false;
          scheduleTimeTick();
 diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
-index 412dc32f7..fa8ac59eb 100644
+index 9f3ec856b..f5ec61fa1 100644
 --- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
 +++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
-@@ -199,6 +199,19 @@ public class DozeParameters implements
+@@ -208,6 +208,19 @@ public class DozeParameters implements
          return mResources.getBoolean(R.bool.doze_suspend_display_state_supported);
      }
  
@@ -201,6 +201,3 @@ index 412dc32f7..fa8ac59eb 100644
      public int getPulseDuration() {
          return getPulseInDuration() + getPulseVisibleDuration() + getPulseOutDuration();
      }
--- 
-2.53.0
-

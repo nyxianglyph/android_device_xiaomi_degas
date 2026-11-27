@@ -1,7 +1,7 @@
-From e0971406893628061a6d26fc9f8613104e46ea46 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
 Date: Tue, 24 Nov 2026 08:25:32 +0300
-Subject: [PATCH 1/2] display: let a device choose the refresh rate for UDFPS
+Subject: [PATCH 1/3] display: let a device choose the refresh rate for UDFPS
 
 While an under-display fingerprint sensor reads a finger the display is
 locked to its highest refresh rate. That is wrong for panels that can
@@ -32,7 +32,7 @@ index baa4db267..a8c6843d8 100644
 +    <integer name="config_udfpsRefreshRate">0</integer>
  </resources>
 diff --git a/core/res/res/values/cr_symbols.xml b/core/res/res/values/cr_symbols.xml
-index 1119ae01b..e702a2a96 100644
+index 5e3bc637e..89f70fc83 100644
 --- a/core/res/res/values/cr_symbols.xml
 +++ b/core/res/res/values/cr_symbols.xml
 @@ -79,4 +79,7 @@
@@ -44,10 +44,10 @@ index 1119ae01b..e702a2a96 100644
 +    <java-symbol type="integer" name="config_udfpsRefreshRate" />
  </resources>
 diff --git a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
-index 81341609b..6673e5806 100644
+index 5b49a1df7..95bcc9bce 100644
 --- a/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
 +++ b/services/core/java/com/android/server/display/mode/DisplayModeDirector.java
-@@ -2825,14 +2825,33 @@ public class DisplayModeDirector {
+@@ -2920,14 +2920,33 @@ public class DisplayModeDirector {
          private void updateVoteLocked(int displayId, boolean enabled, int votePriority) {
              final Vote vote;
              if (enabled) {
@@ -83,6 +83,3 @@ index 81341609b..6673e5806 100644
          @GuardedBy("mLock")
          void dumpLocked(PrintWriter pw) {
              pw.println("  UdfpsObserver");
--- 
-2.53.0
-

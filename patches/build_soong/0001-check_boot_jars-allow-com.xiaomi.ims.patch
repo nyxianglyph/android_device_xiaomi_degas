@@ -1,0 +1,21 @@
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Thu, 26 Nov 2026 20:22:24 +0300
+Subject: [PATCH] check_boot_jars: allow com.xiaomi.ims
+
+---
+ scripts/check_boot_jars/package_allowed_list.txt | 4 ++++
+ 1 file changed, 4 insertions(+)
+
+diff --git a/scripts/check_boot_jars/package_allowed_list.txt b/scripts/check_boot_jars/package_allowed_list.txt
+index f19b12a..8e555a2 100644
+--- a/scripts/check_boot_jars/package_allowed_list.txt
++++ b/scripts/check_boot_jars/package_allowed_list.txt
+@@ -260,3 +260,7 @@ com.camera.camera2.extensions.*
+ ###################################################
+ # Xiaomi Extensions
+ com.xiaomi.extensions.*
++
++###################################################
++# Xiaomi's part of the MediaTek IMS framework
++com\.xiaomi\.ims

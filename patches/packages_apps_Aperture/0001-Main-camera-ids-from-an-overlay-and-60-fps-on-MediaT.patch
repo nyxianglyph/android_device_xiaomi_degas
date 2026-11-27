@@ -1,4 +1,4 @@
-From 056d165b06bb53040f13acdf75cf3aea63cb9313 Mon Sep 17 00:00:00 2001
+From 0000000000000000000000000000000000000000 Mon Sep 17 00:00:00 2001
 From: nyxianglyph <nyxianglyph@gmail.com>
 Date: Wed, 25 Nov 2026 18:57:06 +0300
 Subject: [PATCH] Main camera ids from an overlay and 60 fps on MediaTek
@@ -14,7 +14,7 @@ Change-Id: I0a2b882217f3280e8255122e7cac040eac534985
  6 files changed, 60 insertions(+), 19 deletions(-)
 
 diff --git a/app/src/main/java/org/lineageos/aperture/CameraActivity.kt b/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
-index 9d51ad1..8bd602c 100644
+index 5d3c6fa..5c232f3 100644
 --- a/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
 +++ b/app/src/main/java/org/lineageos/aperture/CameraActivity.kt
 @@ -90,6 +90,7 @@ import org.lineageos.aperture.ext.setColorCorrectionAberrationMode
@@ -25,7 +25,7 @@ index 9d51ad1..8bd602c 100644
  import org.lineageos.aperture.ext.setHotPixelMode
  import org.lineageos.aperture.ext.setNoiseReductionMode
  import org.lineageos.aperture.ext.setPadding
-@@ -1635,6 +1636,13 @@ open class CameraActivity : AppCompatActivity(R.layout.activity_camera) {
+@@ -1649,6 +1650,13 @@ open class CameraActivity : AppCompatActivity(R.layout.activity_camera) {
                          else -> null
                      }
                  )
@@ -178,6 +178,3 @@ index 72cd4c7..022f2fa 100644
      <!-- Enable auxiliary cameras selector. -->
      <bool name="config_enableAuxCameras">false</bool>
  
--- 
-2.53.0
-
