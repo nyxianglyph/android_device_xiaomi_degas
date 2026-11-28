@@ -48,9 +48,11 @@
          moved, not when it is touched. -->
     <string name="config_dozeUdfpsLongPressSensorType" translatable="false">com.nyxianglyph.sensor.udfps</string>
     <string name="config_dozeTapSensorType" translatable="false">com.nyxianglyph.sensor.tap</string>
-    <!-- The same finger report comes from the dark panel, so unlocking with
-         the screen off can be offered as a setting; it is off by default. -->
+    <!-- The same finger report comes from the dark panel, so the fingerprint
+         also unlocks with the screen off. On by default: without it nothing
+         listens to the sensor while the display is off and AOD is not shown. -->
     <bool name="config_screen_off_udfps_enabled">true</bool>
+    <bool name="config_screen_off_udfps_default_on">true</bool>
 
     <!-- The second SIM slot is the card tray or the built-in eSIM chip,
          whichever the modem is told to use (esim/). -->
