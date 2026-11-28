@@ -214,7 +214,9 @@ ro.hardware.wlan.dbs=1
 debug.mediatek.disp_decompress=1
 ro.bluetooth.a2dp_offload.supported=true
 persist.bluetooth.a2dp_offload.cap=sbc-aac
-persist.bluetooth.a2dp_offload.disabled=false
+# A2DP goes through the software encoder: the offload path starts but stays
+# silent with the source-built Bluetooth stack.
+persist.bluetooth.a2dp_offload.disabled=true
 persist.vendor.bluetooth.supportopphdt=no
 audio.offload.video=true
 audio.offload.min.duration.secs=30

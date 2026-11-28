@@ -294,6 +294,20 @@ blob_fixups: blob_fixups_user_type = {
     # service; the rest of the stock rc (log directories, dump services) stays.
     'vendor/etc/init/hw/init_conninfra.rc': blob_fixup()
         .regex_replace(r'service conninfra_loader [^\n]*\n(?:[ \t]+[^\n]*\n)+', ''),
+    # The stock r_submix file declares Xiaomi's multiroute device, which the
+    # source-built audio policy cannot parse; with it the whole policy file is
+    # rejected and the default (speaker only) policy is used.
+    **{
+        f'vendor/etc/{name}': blob_fixup().regex_replace(
+            'r_submix_audio_policy_configuration_xm.xml',
+            'r_submix_audio_policy_configuration.xml')
+        for name in (
+            'audio_policy_configuration_a2dp_offload_disabled.xml',
+            'audio_policy_configuration_a2dp_offload_disabled_cg_enabled.xml',
+            'audio_policy_configuration_a2dp_offload_enable_cg_enable.xml',
+            'audio_policy_configuration_bluetooth_legacy_hal.xml',
+        )
+    },
 }  # fmt: skip
 
 module = ExtractUtilsModule(

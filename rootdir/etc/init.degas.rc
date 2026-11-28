@@ -42,3 +42,9 @@ service vendor.audio-hal /vendor/bin/hw/android.hardware.audio.service.mediatek
     task_profiles ProcessCapacityHigh HighPerformance
     socket audio_hw_socket seqpacket 0666 system system
     onrestart restart audioserver
+
+# A2DP offload stays silent (see props/vendor.prop). A value stored by an
+# older build or set by hand would win over the build default, so it is
+# forced off here.
+on property:persist.bluetooth.a2dp_offload.disabled=false
+    setprop persist.bluetooth.a2dp_offload.disabled true
