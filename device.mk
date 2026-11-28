@@ -231,6 +231,12 @@ PRODUCT_PRODUCT_PROPERTIES += \
 PRODUCT_VENDOR_PROPERTIES += \
     persist.sys.sf.native_mode=258
 
+# Stock brightness map with its high brightness mode: normal use ends at
+# 500 nits (half the panel range), the rest only in bright sunlight. The
+# vendor copy maps the whole range to the slider. Read before the vendor one.
+PRODUCT_COPY_FILES += \
+    $(LOCAL_PATH)/configs/displayconfig/display_id_4627039422300187648.xml:$(TARGET_COPY_OUT_PRODUCT)/etc/displayconfig/display_id_4627039422300187648.xml
+
 # The touch controller's doze gestures as sensors: a sub-HAL of the stock
 # sensor HAL, which loads what hals.conf lists.
 PRODUCT_PACKAGES += \
