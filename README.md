@@ -83,13 +83,16 @@ Add to `.repo/local_manifests/degas.xml`:
 repo sync
 ```
 
-Six changes to the ROM source come with the tree, in `patches/`:
+Seven changes to the ROM source come with the tree, in `patches/`:
 
 - two let a device choose the refresh rate for the fingerprint sensor and hold
   the display at it for as long as the sensor area is on screen; without them
   the whole screen brightens when a finger is pressed on the sensor;
 - one gives SystemUI the doze options this panel needs; without it the
   always-on display turns black a few seconds after the screen is locked;
+- one makes SystemUI follow the always-on display that is only on while
+  charging; without it the screen keeps the last frame when the phone is
+  locked on the charger;
 - one names a network from the carrier list when the modem reports only its
   number; without it some networks show as a number such as 28602;
 - one lets Aperture take the main cameras from an overlay and record 60 fps

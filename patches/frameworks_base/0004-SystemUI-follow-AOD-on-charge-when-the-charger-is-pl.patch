@@ -1,0 +1,62 @@
+From a0bd5975f1726ea4700530adcc197f6bac7eeb90 Mon Sep 17 00:00:00 2001
+From: nyxianglyph <nyxianglyph@gmail.com>
+Date: Sat, 28 Nov 2026 19:49:39 +0300
+Subject: [PATCH] SystemUI: follow AOD on charge when the charger is plugged in
+ or out
+
+---
+ .../statusbar/phone/DozeParameters.java       | 20 ++++++++++++++++++-
+ 1 file changed, 19 insertions(+), 1 deletion(-)
+
+diff --git a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+index f5ec61fa1..c37c2339d 100644
+--- a/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
++++ b/packages/SystemUI/src/com/android/systemui/statusbar/phone/DozeParameters.java
+@@ -172,6 +172,7 @@ public class DozeParameters implements
+         tunerService.addTunable(
+                 this,
+                 Settings.Secure.DOZE_ALWAYS_ON,
++                Settings.Secure.DOZE_ON_CHARGE,
+                 Settings.Secure.ACCESSIBILITY_DISPLAY_INVERSION_ENABLED);
+         configurationController.addCallback(this);
+         statusBarStateController.addCallback(this);
+@@ -188,10 +189,26 @@ public class DozeParameters implements
+         quickPickupSettingsObserver.observe();
+ 
+         batteryController.addCallback(new BatteryStateChangeCallback() {
++                private boolean mLastAlwaysOn = getAlwaysOn();
++
+                 @Override
+                 public void onPowerSaveChanged(boolean isPowerSave) {
+                     dispatchAlwaysOnEvent();
+                 }
++
++                // AOD on charge turns always-on on and off with the charger, so the
++                // screen-off animation and the AOD state have to follow it.
++                @Override
++                public void onBatteryLevelChanged(int level, boolean pluggedIn,
++                        boolean charging) {
++                    final boolean alwaysOn = getAlwaysOn();
++                    if (alwaysOn == mLastAlwaysOn) {
++                        return;
++                    }
++                    mLastAlwaysOn = alwaysOn;
++                    updateControlScreenOff();
++                    dispatchAlwaysOnEvent();
++                }
+             });
+     }
+ 
+@@ -475,7 +492,8 @@ public class DozeParameters implements
+ 
+     @Override
+     public void onTuningChanged(String key, String newValue) {
+-        if (key.equals(Settings.Secure.DOZE_ALWAYS_ON)) {
++        if (key.equals(Settings.Secure.DOZE_ALWAYS_ON)
++                || key.equals(Settings.Secure.DOZE_ON_CHARGE)) {
+             updateControlScreenOff();
+         }
+ 
+-- 
+2.53.0
+
