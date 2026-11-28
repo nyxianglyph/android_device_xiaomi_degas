@@ -209,6 +209,11 @@ PRODUCT_PACKAGES += \
 PRODUCT_PACKAGES += \
     DegasParts
 
+# The modem's own NR option, which only MediaTek's telephony framework sets on
+# stock; without it standalone 5G stays off (nroption/).
+PRODUCT_PACKAGES += \
+    NrOption
+
 # The classic Bluetooth profiles (audio, calls, phone book, messages, files,
 # tethering, input). Stock sets them in its product and system partitions,
 # which the source build replaces; the LE Audio ones are vendor properties.

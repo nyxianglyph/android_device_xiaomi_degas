@@ -1,0 +1,16 @@
+//
+// Copyright (C) 2026 nyxianglyph
+//
+// SPDX-License-Identifier: Apache-2.0
+//
+
+android_app {
+    name: "NrOption",
+    srcs: ["src/**/*.java"],
+    certificate: "platform",
+    platform_apis: true,
+    system_ext_specific: true,
+    optimize: {
+        enabled: false,
+    },
+}
